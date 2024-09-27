@@ -1,0 +1,15 @@
+Metadata-Version: 2.1
+Name: Groupy
+Version: 3.0.0
+Summary: Groupy -- A Useful Tool for Molecular Analysis
+Home-page: https://github.com/47-5/Groupy
+Author: Ruichen Liu
+Author-email: 1197748182@qq.com
+Requires-Python: >3.5
+Requires-Dist: rdkit
+Requires-Dist: pandas
+Requires-Dist: numpy
+Requires-Dist: tqdm
+Requires-Dist: ase
+Requires-Dist: joblib
+Requires-Dist: openpyxl
