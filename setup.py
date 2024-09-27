@@ -15,19 +15,19 @@ setup(
 
     packages=find_packages(),
 
-    install_requires=['rdkit', 'pandas', 'numpy', 'tqdm', 'ase', 'joblib', 'openbabel', 'openpyxl'],
+    install_requires=['rdkit', 'pandas', 'numpy', 'tqdm', 'ase', 'joblib', 'openpyxl'],
     python_requires='>3.5',
 
-    data_files=[(join('.', 'src', 'gp_3x_internal_data'), [join('.', 'src', 'gp_3x_internal_data', 'group_contribution_parameters.xlsx'),
-                                                           join('.', 'src', 'gp_3x_internal_data', 'group_order.xlsx')
+    data_files=[(join('.', 'groupy', 'gp_3x_internal_data'), [join('.', 'groupy', 'gp_3x_internal_data', 'group_contribution_parameters.xlsx'),
+                                                           join('.', 'groupy', 'gp_3x_internal_data', 'group_order.xlsx')
                                                            ])],
 
 
     entry_points={
             'console_scripts': [
-                'Groupy = src.groupy:main'
+                'Groupy = groupy.groupy:main'
             ]
         },
-    scripts=['src/groupy.py'],
+    scripts=['groupy/groupy.py'],
 
 )
