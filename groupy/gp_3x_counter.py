@@ -4,6 +4,8 @@ from rdkit import Chem
 import pandas as pd
 from joblib import Parallel, delayed
 
+from groupy.gp_3x_loader import Loader
+
 
 # tool
 def has_non_aromatic_neighbor(atom):
@@ -3122,6 +3124,7 @@ def t_074(mol):
 
 class Counter:
     def __init__(self):
+        self.loader = Loader()
 
         self.init_result = {
             'f_001': 0, 'f_002': 0, 'f_003': 0, 'f_004': 0, 'f_005': 0, 'f_006': 0, 'f_007': 0, 'f_008': 0, 'f_009': 0,
@@ -3216,15 +3219,16 @@ class Counter:
                 t_046, t_047, t_048, t_049, t_050, t_051, t_052, t_053, t_054, t_055, t_056, t_057, t_058, t_059, t_060,
                 t_061, t_062, t_063, t_064, t_065, t_066, t_067, t_068, t_069, t_070, t_071, t_072, t_073, t_074,
             ]
-        basepath = os.path.abspath(__file__)
-        folder = os.path.dirname(basepath)
-        group_order_file_path = os.path.join(folder, 'group_order.xlsx')
-        self.f_order_group_function_order = (
-                pd.read_excel(group_order_file_path, sheet_name='f')['index'] - 1).tolist()  # 减1是为了基团序号和列表索引对上,因为python列表里的索引是从0开始的
-        self.s_order_group_function_order = (
-                pd.read_excel(group_order_file_path, sheet_name='s')['index'] - 1).tolist()  # 减1是为了基团序号和列表索引对上
-        self.t_order_group_function_order = (
-                pd.read_excel(group_order_file_path, sheet_name='t')['index'] - 1).tolist()  # 减1是为了基团序号和列表索引对上
+        # basepath = os.path.abspath(__file__)
+        # folder = os.path.dirname(basepath)
+        # group_order_file_path = os.path.join(folder, 'group_order.xlsx')
+        # self.f_order_group_function_order = (
+        #         pd.read_excel(group_order_file_path, sheet_name='f')['index'] - 1).tolist()  # 减1是为了基团序号和列表索引对上,因为python列表里的索引是从0开始的
+        # self.s_order_group_function_order = (
+        #         pd.read_excel(group_order_file_path, sheet_name='s')['index'] - 1).tolist()  # 减1是为了基团序号和列表索引对上
+        # self.t_order_group_function_order = (
+        #         pd.read_excel(group_order_file_path, sheet_name='t')['index'] - 1).tolist()  # 减1是为了基团序号和列表索引对上
+        self.f_order_group_function_order, self.s_order_group_function_order, self.t_order_group_function_order = self.loader.load_group_order()
 
     def count_a_mol(self, mol, clear_mode=False, add_note=False, add_smiles=False):
         init_smi = mol
@@ -3356,22 +3360,22 @@ class Counter:
         return None
 
 
-# if __name__ == '__main__':
-#     print('debug gp_3x_counter.py ...')
-#     import time
-#
-#     t1 = time.time()
-#     # m = Chem.MolFromSmiles('Cc1ncc[nH]1')
-#     c = Counter()
-#     # result = c.count_a_mol(m, clear_mode=True)
-#     # print(result)
-#     #
-#     # print(c.get_group_fingerprint(m))
-#
-#     # c.count_mols_mpi(smiles_file_path=os.path.join('gp_3x_test_mol', 'SMILES.txt'), count_result_file_path='count_result.csv', add_note=True,
-#     #                  n_jobs=4, batch_size='auto')
-#     #
-#     #
-#     # t2 = time.time()
-#     # print(t2 - t1)
-#     print(os.path.exists(r'C:\Users\tjulrc\Desktop\Groupy_test\groupy\gp_3x_internal_data\group_order.xlsx'))
+if __name__ == '__main__':
+    print('debug gp_3x_counter.py ...')
+    import time
+
+    t1 = time.time()
+    # m = Chem.MolFromSmiles('Cc1ncc[nH]1')
+    c = Counter()
+    # result = c.count_a_mol(m, clear_mode=True)
+    # print(result)
+    #
+    # print(c.get_group_fingerprint(m))
+
+    # c.count_mols_mpi(smiles_file_path=os.path.join('gp_3x_test_mol', 'SMILES.txt'), count_result_file_path='count_result.csv', add_note=True,
+    #                  n_jobs=4, batch_size='auto')
+    #
+    #
+    # t2 = time.time()
+    # print(t2 - t1)
+    print(os.path.exists(r'C:\Users\tjulrc\Desktop\Groupy_test\groupy\gp_3x_internal_data\group_order.xlsx'))
