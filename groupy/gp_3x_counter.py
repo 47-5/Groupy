@@ -1,10 +1,9 @@
-import os.path
 from tqdm import tqdm
 from rdkit import Chem
 import pandas as pd
 from joblib import Parallel, delayed
 
-from gp_3x_loader import Loader
+from groupy.gp_3x_loader import Loader
 
 
 # tool
