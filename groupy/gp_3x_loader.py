@@ -3,8 +3,11 @@ import os
 
 
 class Loader:
-    def __init__(self, load_path=os.path.join('gp_3x_internal_data', 'group_contribution_parameters.xlsx')):
-        self.load_path = load_path
+    def __init__(self, ):
+        basepath = os.path.abspath(__file__)
+        folder = os.path.dirname(basepath)
+        load_path = os.path.join('group_contribution_parameters.xlsx')
+        self.load_path = os.path.join(folder, load_path)
 
     def load_parameters(self, parameter_type='simultaneous', split=False):
         assert parameter_type in ['simultaneous', 'step_wise'], '请确保参数类型为simultaneous或step_wise!'
@@ -24,8 +27,8 @@ class Loader:
 #     # debug
 #     loader = Loader()
 #
-#     d = loader.load_parameters()
-#     for i in d:
-#         print(i)
-#         print(d[i])
+#     # d = loader.load_parameters()
+#     # for i in d:
+#     #     print(i)
+#     #     print(d[i])
 

@@ -18,8 +18,8 @@ setup(
     install_requires=['rdkit', 'pandas', 'numpy', 'tqdm', 'ase', 'joblib', 'openpyxl'],
     python_requires='>3.5',
 
-    data_files=[(join('.', 'groupy', 'gp_3x_internal_data'), [join('.', 'groupy', 'gp_3x_internal_data', 'group_contribution_parameters.xlsx'),
-                                                           join('.', 'groupy', 'gp_3x_internal_data', 'group_order.xlsx')
+    data_files=[(join('.', 'groupy'), [join('.', 'groupy', 'group_contribution_parameters.xlsx'),
+                                                           join('.', 'groupy', 'group_order.xlsx')
                                                            ])],
 
 

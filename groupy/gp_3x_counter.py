@@ -3216,7 +3216,9 @@ class Counter:
                 t_046, t_047, t_048, t_049, t_050, t_051, t_052, t_053, t_054, t_055, t_056, t_057, t_058, t_059, t_060,
                 t_061, t_062, t_063, t_064, t_065, t_066, t_067, t_068, t_069, t_070, t_071, t_072, t_073, t_074,
             ]
-        group_order_file_path = os.path.join('gp_3x_internal_data', 'group_order.xlsx')
+        basepath = os.path.abspath(__file__)
+        folder = os.path.dirname(basepath)
+        group_order_file_path = os.path.join(folder, 'group_order.xlsx')
         self.f_order_group_function_order = (
                 pd.read_excel(group_order_file_path, sheet_name='f')['index'] - 1).tolist()  # 减1是为了基团序号和列表索引对上,因为python列表里的索引是从0开始的
         self.s_order_group_function_order = (
@@ -3366,9 +3368,10 @@ class Counter:
 #     #
 #     # print(c.get_group_fingerprint(m))
 #
-#     c.count_mols_mpi(smiles_file_path=os.path.join('gp_3x_test_mol', 'SMILES.txt'), count_result_file_path='count_result.csv', add_note=True,
-#                      n_jobs=4, batch_size='auto')
-#
-#
-#     t2 = time.time()
-#     print(t2 - t1)
+#     # c.count_mols_mpi(smiles_file_path=os.path.join('gp_3x_test_mol', 'SMILES.txt'), count_result_file_path='count_result.csv', add_note=True,
+#     #                  n_jobs=4, batch_size='auto')
+#     #
+#     #
+#     # t2 = time.time()
+#     # print(t2 - t1)
+#     print(os.path.exists(r'C:\Users\tjulrc\Desktop\Groupy_test\groupy\gp_3x_internal_data\group_order.xlsx'))
