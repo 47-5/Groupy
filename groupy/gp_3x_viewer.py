@@ -4,7 +4,7 @@ from ase.io import read
 import os
 from pprint import pprint
 
-from groupy.gp_3x_convertor import Convertor
+from gp_3x_convertor import Convertor
 
 
 class Viewer:
