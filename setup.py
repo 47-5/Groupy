@@ -1,5 +1,4 @@
 from setuptools import setup, find_packages
-import os
 
 
 VERSION = '3.0.0'
@@ -11,9 +10,18 @@ setup(
     author="Ruichen Liu",
     author_email="1197748182@qq.com",
     description=DESCRIPTION,
-
     url='https://github.com/47-5/Groupy',
+
     packages=find_packages(),
 
-    data_files=[]
+    install_requires=['rdkit', 'pandas', 'numpy', 'tqdm', 'ase', 'joblib', 'openbabel'],
+    python_requires='>3.5',
+
+    entry_points={
+            'console_scripts': [
+                'Groupy = src.groupy:main'
+            ]
+        },
+    scripts=['src/groupy.py'],
+
 )
