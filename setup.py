@@ -1,4 +1,5 @@
 from setuptools import setup, find_packages
+from os.path import join
 
 
 VERSION = '3.0.0'
@@ -14,8 +15,13 @@ setup(
 
     packages=find_packages(),
 
-    install_requires=['rdkit', 'pandas', 'numpy', 'tqdm', 'ase', 'joblib', 'openbabel'],
+    install_requires=['rdkit', 'pandas', 'numpy', 'tqdm', 'ase', 'joblib', 'openbabel', 'openpyxl'],
     python_requires='>3.5',
+
+    data_files=[(join('.', 'src', 'gp_3x_internal_data'), [join('.', 'src', 'gp_3x_internal_data', 'group_contribution_parameters.xlsx'),
+                                                           join('.', 'src', 'gp_3x_internal_data', 'group_order.xlsx')
+                                                           ])],
+
 
     entry_points={
             'console_scripts': [
