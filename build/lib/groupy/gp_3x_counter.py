@@ -1,4 +1,3 @@
-import os.path
 from tqdm import tqdm
 from rdkit import Chem
 import pandas as pd
