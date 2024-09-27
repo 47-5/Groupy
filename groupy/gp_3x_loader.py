@@ -19,13 +19,13 @@ class Loader:
             return {**step_wise_first_order, **step_wise_second_order, **step_wise_third_order, **step_wise_universal_constants}
 
 
-if __name__ == '__main__':
-
-    # debug
-    loader = Loader()
-
-    d = loader.load_parameters()
-    for i in d:
-        print(i)
-        print(d[i])
+# if __name__ == '__main__':
+#
+#     # debug
+#     loader = Loader()
+#
+#     d = loader.load_parameters()
+#     for i in d:
+#         print(i)
+#         print(d[i])
 

@@ -494,8 +494,7 @@ calculator.calculate_mols(input_file_path, output_file_path)  # 开始计算
 ```sh
 # 使用8个进程并行计算
 # 注意Windows和Linux路径的区别
-mpirun -np 8 python ./gp_3x_mpirun.py -smiles_file_path ./gp_3x_internal_data/gdb.txt -result_file_path mpi_batch_calculate_results.csv -task calculate  # Linux系统中输入这一行
-mpiexec -np 8 python .\gp_3x_mpirun.py -smiles_file_path .\gp_3x_internal_data\gdb.txt -result_file_path mpi_batch_calculate_results.csv -task calculate  # Windows系统中输入这一行
+
 ```
 
 程序将会在当前目录输出名为`mpi_batch_calculate_results.csv`的结果文件。
@@ -532,8 +531,7 @@ c.count_mols(smiles_file_path=os.path.join('gp_3x_test_mol', 'SMILES.txt'),
 ```sh
 # 使用8个进程并行计算
 # 注意Windows和Linux路径的区别
-mpirun -np 8 python ./gp_3x_mpirun.py -smiles_file_path ./gp_3x_internal_data/gdb.txt -result_file_path mpi_batch_count_results.csv -task count  # Linux系统中输入这一行
-mpiexec -np 8 python .\gp_3x_mpirun.py -smiles_file_path .\gp_3x_internal_data\gdb.txt -result_file_path mpi_batch_count_results.csv -task count  # Windows系统中输入这一行
+
 ```
 
 程序将会在当前目录输出名为`mpi_batch_count_results.csv`的结果文件。
@@ -577,8 +575,7 @@ t.batch_smi_to_xyz(smiles_file_path='SMILES.txt', xyz_root_path='test_xyz')  # �
 ```sh
 # 使用8个进程并行计算
 # 注意Windows和Linux路径的区别
-mpirun -np 8 python .\gp_3x_mpirun.py -smiles_file_path ./gp_3x_test_mol/SMILES.txt -out_root_path mpi_test_xyz -task xyz  # Linux系统中输入这一行
-mpiexec -np 8 python .\gp_3x_mpirun.py -smiles_file_path ./gp_3x_test_mol/SMILES.txt -out_root_path mpi_test_xyz -task xyz  # Windows系统中输入这一行
+
 ```
 
 
@@ -651,8 +648,7 @@ t.batch_smi_to_gjf(smiles_file_path='SMILES.txt', gjf_root_path='test_gjf',
 ```sh
 # 使用8个进程并行计算
 # 注意Windows和Linux路径的区别
-mpirun -np 8 python gp_3x_mpirun.py -smiles_file_path ./gp_3x_test_mol/SMILES.txt -out_root_path mpi_test_gjf -nproc 12 -mem 12GB -gaussian_keywords "#p opt freq b3lyp/6-31g*" --add_other_std_tasks -task gjf  # Linux系统中输入这一行
-mpiexec -np 8 python gp_3x_mpirun.py -smiles_file_path ./gp_3x_test_mol/SMILES.txt -out_root_path mpi_test_gjf -nproc 12 -mem 12GB -gaussian_keywords "#p opt freq b3lyp/6-31g*" --add_other_std_tasks -task gjf  # Windows系统中输入这一行
+
 ```
 
 

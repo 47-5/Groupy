@@ -1,9 +1,11 @@
-from gp_3x_loader import Loader
-from gp_3x_counter import Counter
 from rdkit import Chem
 from math import log
 import pandas as pd
 from tqdm import tqdm
+from joblib import Parallel, delayed
+
+from gp_3x_loader import Loader
+from gp_3x_counter import Counter
 
 
 class Calculator:
@@ -149,59 +151,78 @@ class Calculator:
         return molar_mass
 
     def calculate_a_mol(self, mol, parameter_type='step_wise', debug=False):
-        if isinstance(mol, str):
-            mol = Chem.MolFromSmiles(mol)
-        group_number = self.counter.count_a_mol(mol, clear_mode=True, add_note=True)
-        if group_number.get('note', ''):
-            counter_note = group_number['note']
-            del group_number['note']
-        else:
-            counter_note = ''
+        init_smi = mol
+        try:
+            if isinstance(mol, str):
+                mol = Chem.MolFromSmiles(mol)
+            group_number = self.counter.count_a_mol(mol, clear_mode=True, add_note=True)
+            if group_number.get('note', ''):
+                counter_note = group_number['note']
+                del group_number['note']
+            else:
+                counter_note = ''
 
-        if parameter_type == 'step_wise':
-            parameters = self.parameters_step_wise  # todo 这里是速度慢的原因，每算一个分子都要加载一遍参数，要修改
-        elif parameter_type == 'simultaneous':
-            parameters = self.parameters_simultaneous
-        else:
-            raise NotImplemented('不可用的参数类型，只能使用step_wise或simultaneous')
+            if parameter_type == 'step_wise':
+                parameters = self.parameters_step_wise  # todo 这里是速度慢的原因，每算一个分子都要加载一遍参数，要修改
+            elif parameter_type == 'simultaneous':
+                parameters = self.parameters_simultaneous
+            else:
+                raise NotImplemented('不可用的参数类型，只能使用step_wise或simultaneous')
 
-        if debug:
-            print(group_number)
-            # print(parameters)
-        Tm = self.Tm(group_number=group_number, parameters=parameters)
-        Tb = self.Tb(group_number=group_number, parameters=parameters)
-        Tc = self.Tc(group_number=group_number, parameters=parameters)
-        Pc = self.Pc(group_number=group_number, parameters=parameters)
-        Vc = self.Vc(group_number=group_number, parameters=parameters)
-        delta_Gf = self.delta_Gf(group_number=group_number, parameters=parameters)
-        delta_Hf = self.delta_Hf(group_number=group_number, parameters=parameters)
-        delta_Hv = self.delta_Hv(group_number=group_number, parameters=parameters)
-        delta_Hfus = self.delta_Hfus(group_number=group_number, parameters=parameters)
-        C_number = self.C_number(mol)
-        H_number = self.H_number(mol)
-        molar_mass = self.molar_mass(mol)
-        flash_point = self.flash_point(group_number=group_number, parameters=parameters)
-        molar_volume = self.molar_volume(group_number=group_number, parameters=parameters)
-        density = self.density(molar_mass=molar_mass, Vs=molar_volume)
-        delta_Hc = self.delta_Hc(C_number=C_number, H_number=H_number, delta_Hf=delta_Hf)
-        q = self.q(delta_Hc=delta_Hc, molar_mass=molar_mass)
-        isp = self.isp(C_number=C_number, H_number=H_number, q=q)
-        smiles = self.smiles(mol)
-        return {'smiles': smiles,
-                'molar_mass': molar_mass,
-                'flash_point/K': flash_point,
-                'Tm/K': Tm, 'Tb/K': Tb, 'Tc/K': Tc,
-                'Pc/bar': Pc, 'Vc/(cm3/mol)': Vc,
-                'density/(g/cm3)': density,
-                'delta_G/(KJ/mol)': delta_Gf,
-                'delta_Hf/(KJ/mol)': delta_Hf,
-                'delta_Hvap/(KJ/mol)': delta_Hv,
-                'delta_Hfus/(KJ/mol)': delta_Hfus,
-                'molar_volume/(cm3/mol)(default298K)': molar_volume,
-                'delta_Hc/(KJ/mol)': delta_Hc,
-                'mass_calorific_value_h/(MJ/kg)': q,
-                'ISP': isp,
-                'note': counter_note + ' at 298K'}
+            if debug:
+                print(group_number)
+                # print(parameters)
+            Tm = self.Tm(group_number=group_number, parameters=parameters)
+            Tb = self.Tb(group_number=group_number, parameters=parameters)
+            Tc = self.Tc(group_number=group_number, parameters=parameters)
+            Pc = self.Pc(group_number=group_number, parameters=parameters)
+            Vc = self.Vc(group_number=group_number, parameters=parameters)
+            delta_Gf = self.delta_Gf(group_number=group_number, parameters=parameters)
+            delta_Hf = self.delta_Hf(group_number=group_number, parameters=parameters)
+            delta_Hv = self.delta_Hv(group_number=group_number, parameters=parameters)
+            delta_Hfus = self.delta_Hfus(group_number=group_number, parameters=parameters)
+            C_number = self.C_number(mol)
+            H_number = self.H_number(mol)
+            molar_mass = self.molar_mass(mol)
+            flash_point = self.flash_point(group_number=group_number, parameters=parameters)
+            molar_volume = self.molar_volume(group_number=group_number, parameters=parameters)
+            density = self.density(molar_mass=molar_mass, Vs=molar_volume)
+            delta_Hc = self.delta_Hc(C_number=C_number, H_number=H_number, delta_Hf=delta_Hf)
+            q = self.q(delta_Hc=delta_Hc, molar_mass=molar_mass)
+            isp = self.isp(C_number=C_number, H_number=H_number, q=q)
+            smiles = self.smiles(mol)
+            return {'smiles': smiles,
+                    'molar_mass': molar_mass,
+                    'flash_point/K': flash_point,
+                    'Tm/K': Tm, 'Tb/K': Tb, 'Tc/K': Tc,
+                    'Pc/bar': Pc, 'Vc/(cm3/mol)': Vc,
+                    'density/(g/cm3)': density,
+                    'delta_G/(KJ/mol)': delta_Gf,
+                    'delta_Hf/(KJ/mol)': delta_Hf,
+                    'delta_Hvap/(KJ/mol)': delta_Hv,
+                    'delta_Hfus/(KJ/mol)': delta_Hfus,
+                    'molar_volume/(cm3/mol)(default298K)': molar_volume,
+                    'delta_Hc/(KJ/mol)': delta_Hc,
+                    'mass_calorific_value_h/(MJ/kg)': q,
+                    'ISP': isp,
+                    'note': counter_note + ' at 298K'}
+        except:
+            print(f'Error! There is something wrong when calculating {init_smi}, please check it.')
+            return {'smiles': init_smi,
+                    'molar_mass': '?',
+                    'flash_point/K': '?',
+                    'Tm/K': '?', 'Tb/K': '?', 'Tc/K': '?',
+                    'Pc/bar': '?', 'Vc/(cm3/mol)': '?',
+                    'density/(g/cm3)': '?',
+                    'delta_G/(KJ/mol)': '?',
+                    'delta_Hf/(KJ/mol)': '?',
+                    'delta_Hvap/(KJ/mol)': '?',
+                    'delta_Hfus/(KJ/mol)': '?',
+                    'molar_volume/(cm3/mol)(default298K)': '?',
+                    'delta_Hc/(KJ/mol)': '?',
+                    'mass_calorific_value_h/(MJ/kg)': '?',
+                    'ISP': '?',
+                    'note': 'There must be something wrong with this SMILES'}
 
     def calculate_mols(self, smiles_file_path, properties_file_path='gp_3x_result.csv', parameter_type='simultaneous'):  # todo 还没实现不同步拟合的参数的使用
         print('reading input file...')
@@ -221,7 +242,7 @@ class Calculator:
         error_smi = []
         for i in tqdm(smiles_iterator):
             try:
-                properties_dict_list.append(self.calculate_a_mol(i, parameter_type='step_wise'))
+                properties_dict_list.append(self.calculate_a_mol(i, parameter_type=parameter_type))
             except:
                 error_smi.append(i)
         print('calculation completed!')
@@ -234,5 +255,34 @@ class Calculator:
         print('Done!')
         return result
 
+    def calculate_mols_mpi(self, smiles_file_path, properties_file_path='gp_3x_result_mpi.csv', parameter_type='simultaneous', n_jobs=1, batch_size='auto'):
+        print('reading input file...')
+        if smiles_file_path.endswith('.txt'):
+            smiles_iterator = list(open(smiles_file_path))
+        elif smiles_file_path.endswith('.xlsx'):
+            smiles_iterator = pd.read_excel(smiles_file_path)['smiles']
+        elif smiles_file_path.endswith('.csv'):
+            smiles_iterator = pd.read_csv(smiles_file_path)['smiles']
+        else:
+            print('无法识别的文件类型，请以.txt/.xlsx/.csv类型的文件作为输入。')
+            return None
+        mol_number = len(smiles_iterator)
+        print('reading completed，A total of {} molecules detected, start calculating properties...'.format(mol_number))
+        print('start calculating...')
+        task = [delayed(self.calculate_a_mol)(i, parameter_type=parameter_type) for i in smiles_iterator]
+        properties_dict_list = Parallel(n_jobs=n_jobs, batch_size=batch_size)(task)
+        print('calculation completed!')
+        print('start to export result to {} ...'.format(properties_file_path))
+        result = pd.DataFrame(properties_dict_list)
+        result.to_csv(properties_file_path, index_label='index')
+        print('Done!')
+        return result
 
-# todo 能不能把性质计算改成向量的形式.比较难，而且效率的提升可能不会太多
+
+# if __name__ == '__main__':
+#     import time
+#     t1 = time.time()
+#     c = Calculator()
+#     c.calculate_mols_mpi(smiles_file_path='gp_3x_test_mol/SMILES.txt', n_jobs=4)
+#     t2 = time.time()
+#     print(t2 - t1)

@@ -2,6 +2,7 @@ import os.path
 from tqdm import tqdm
 from rdkit import Chem
 import pandas as pd
+from joblib import Parallel, delayed
 
 
 # tool
@@ -3224,21 +3225,26 @@ class Counter:
                 pd.read_excel(group_order_file_path, sheet_name='t')['index'] - 1).tolist()  # 减1是为了基团序号和列表索引对上
 
     def count_a_mol(self, mol, clear_mode=False, add_note=False, add_smiles=False):
-        if isinstance(mol, str):
-            mol = Chem.MolFromSmiles(mol)
-        self.result = self.init_result.copy()
-        if add_note:
-            # self.result['note'] = ''
-            self.result['note'] = Chem.MolToSmiles(mol)
-        if add_smiles:
-            self.result['smiles'] = Chem.MolToSmiles(mol)
-        self.count_1st_order_groups(mol=mol, add_note=add_note)
-        self.count_2nd_order_groups(mol=mol)
-        self.count_3rd_order_groups(mol=mol)
-        if clear_mode:
-            # 清爽模式,不显示没有统计到的基团
-            self.result = {k: v for k, v in self.result.items() if v}
-        return self.result
+        init_smi = mol
+        try:
+            if isinstance(mol, str):
+                mol = Chem.MolFromSmiles(mol)
+            self.result = self.init_result.copy()
+            if add_note:
+                # self.result['note'] = ''
+                self.result['note'] = Chem.MolToSmiles(mol)
+            if add_smiles:
+                self.result['smiles'] = Chem.MolToSmiles(mol)
+            self.count_1st_order_groups(mol=mol, add_note=add_note)
+            self.count_2nd_order_groups(mol=mol)
+            self.count_3rd_order_groups(mol=mol)
+            if clear_mode:
+                # 清爽模式,不显示没有统计到的基团
+                self.result = {k: v for k, v in self.result.items() if v}
+            return self.result
+        except:
+            print(f'Error! There is something wrong when counting {init_smi}, please check it.')
+            return self.init_result.copy()
 
     def count_mols(self, smiles_file_path, count_result_file_path='count_result.csv', add_note=False, add_smiles=False):  # todo mpi 并行？
         print('reading the input file...')
@@ -3256,9 +3262,30 @@ class Counter:
         print('Done, totally detected {} molecules, start counting...'.format(mol_number))
         count_result_dict_list = []
         for i in tqdm(smiles_iterator):
-            if isinstance(i, str):
-                i = Chem.MolFromSmiles(i)
             count_result_dict_list.append(self.count_a_mol(i, add_note=add_note, add_smiles=add_smiles))
+        print('Done!')
+        print('writing to csv...')
+        result = pd.DataFrame(count_result_dict_list)
+        result.to_csv(count_result_file_path, index_label='index')
+        print('Done!')
+        return result
+
+    def count_mols_mpi(self, smiles_file_path, count_result_file_path='count_result.csv', add_note=False, add_smiles=False, n_jobs=1, batch_size='auto'):
+        print('reading the input file...')
+        if smiles_file_path.endswith('.txt'):
+            smiles_iterator = list(open(smiles_file_path))
+        elif smiles_file_path.endswith('.xlsx'):
+            smiles_iterator = pd.read_excel(smiles_file_path)['smiles']
+        elif smiles_file_path.endswith('.csv'):
+            smiles_iterator = pd.read_csv(smiles_file_path)['smiles']
+        else:
+            raise NotImplementedError(
+                'ERROR: The file type cannot be read, use the.txt/.xlsx/.csv file as the input file.')
+
+        mol_number = len(smiles_iterator)
+        print('Done, totally detected {} molecules, start counting...'.format(mol_number))
+        task = [delayed(self.count_a_mol)(i, add_note=add_note, add_smiles=add_smiles) for i in smiles_iterator]
+        count_result_dict_list = Parallel(n_jobs=n_jobs, batch_size=batch_size)(task)
         print('Done!')
         print('writing to csv...')
         result = pd.DataFrame(count_result_dict_list)
@@ -3327,14 +3354,21 @@ class Counter:
         return None
 
 
-if __name__ == '__main__':
-    print('debug gp_3x_counter.py ...')
-
-    m = Chem.MolFromSmiles('Cc1ncc[nH]1')
-    c = Counter()
-    result = c.count_a_mol(m, clear_mode=True)
-    print(result)
-
-    print(c.get_group_fingerprint(m))
-
-    c.count_mols(smiles_file_path=os.path.join('gp_3x_test_mol', 'SMILES.txt'), count_result_file_path='count_result.csv', add_note=True)
+# if __name__ == '__main__':
+#     print('debug gp_3x_counter.py ...')
+#     import time
+#
+#     t1 = time.time()
+#     # m = Chem.MolFromSmiles('Cc1ncc[nH]1')
+#     c = Counter()
+#     # result = c.count_a_mol(m, clear_mode=True)
+#     # print(result)
+#     #
+#     # print(c.get_group_fingerprint(m))
+#
+#     c.count_mols_mpi(smiles_file_path=os.path.join('gp_3x_test_mol', 'SMILES.txt'), count_result_file_path='count_result.csv', add_note=True,
+#                      n_jobs=4, batch_size='auto')
+#
+#
+#     t2 = time.time()
+#     print(t2 - t1)
