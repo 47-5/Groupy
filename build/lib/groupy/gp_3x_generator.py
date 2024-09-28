@@ -5,8 +5,8 @@ from joblib import Parallel, delayed
 import time
 import random
 
-from groupy.gp_3x_convertor import Convertor
-from groupy.gp_3x_tool import Tool
+from gp_3x_convertor import Convertor
+from gp_3x_tool import Tool
 
 
 class Generator:
