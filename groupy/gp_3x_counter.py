@@ -3,7 +3,7 @@ from rdkit import Chem
 import pandas as pd
 from joblib import Parallel, delayed
 
-from groupy.gp_3x_loader import Loader
+from gp_3x_loader import Loader
 
 
 # tool
