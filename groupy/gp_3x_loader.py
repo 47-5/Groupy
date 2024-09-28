@@ -7,16 +7,19 @@ class Loader:
         basepath = os.path.abspath(__file__)
         folder_path1 = os.path.dirname(basepath)
         folder_path2 = os.path.join(folder_path1, '..', '..', '..', 'groupy_internal_data')
+        folder_path3 = os.path.join(folder_path1, '..', '..', '..', '..', 'groupy_internal_data')
 
         parameters_filename = os.path.join('group_contribution_parameters.xlsx')
         group_order_filename = os.path.join('group_order.xlsx')
         self.parameters_path = [
             os.path.join(folder_path1, parameters_filename),
             os.path.join(folder_path2, parameters_filename),
+            os.path.join(folder_path3, parameters_filename),
                                 ]
         self.group_order_path = [
             os.path.join(folder_path1, group_order_filename),
             os.path.join(folder_path2, group_order_filename),
+            os.path.join(folder_path3, group_order_filename)
             ]
 
     def load_parameters(self, parameter_type='simultaneous', split=False):
