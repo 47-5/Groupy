@@ -15,4 +15,4 @@ groupy/gp_3x_tool.py
 groupy/gp_3x_viewer.py
 groupy/group_contribution_parameters.xlsx
 groupy/group_order.xlsx
-groupy/groupy.py
+groupy/groupy_main.py

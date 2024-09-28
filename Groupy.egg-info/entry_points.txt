@@ -1,2 +1,2 @@
 [console_scripts]
-Groupy = groupy.groupy:main
+Groupy = groupy.groupy_main:main

@@ -25,9 +25,9 @@ setup(
 
     entry_points={
             'console_scripts': [
-                'Groupy = groupy.groupy:main'
+                'Groupy = groupy.groupy_main:main'
             ]
         },
-    scripts=['groupy/groupy.py'],
+    scripts=['groupy/groupy_main.py'],
 
 )
