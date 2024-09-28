@@ -3359,17 +3359,17 @@ class Counter:
         return None
 
 
-# if __name__ == '__main__':
-#     print('debug gp_3x_counter.py ...')
-#     import time
-#
-#     t1 = time.time()
-#     # m = Chem.MolFromSmiles('Cc1ncc[nH]1')
-#     c = Counter()
-#     # result = c.count_a_mol(m, clear_mode=True)
-#     # print(result)
-#     #
-#     # print(c.get_group_fingerprint(m))
+if __name__ == '__main__':
+    print('debug gp_3x_counter.py ...')
+    import time
+
+    t1 = time.time()
+    # m = Chem.MolFromSmiles('Cc1ncc[nH]1')
+    c = Counter()
+    # result = c.count_a_mol(m, clear_mode=True)
+    # print(result)
+    #
+    # print(c.get_group_fingerprint(m))
 #
 #     # c.count_mols_mpi(smiles_file_path=os.path.join('gp_3x_test_mol', 'SMILES.txt'), count_result_file_path='count_result.csv', add_note=True,
 #     #                  n_jobs=4, batch_size='auto')
