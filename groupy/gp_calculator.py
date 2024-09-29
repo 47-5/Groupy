@@ -25,10 +25,13 @@ class Calculator:
     @staticmethod
     def Tm(group_number, parameters):
         """
-        Calculating the freezing (melting) point
+        Calculating the freezing (melting) point. When user call Calculator.calculate_a_mol(), this method will be called automatically.
+        In general, users do not need to call this function themselves
         计算冰点（熔点）
-        :param group_number: result of groupy.
-        :param parameters:
+        :param group_number: number of different groups in a given molecule.
+        In general, users can use the result of groupy.gp_counter.Counter.count_a_mol()
+        :param parameters: parameters used in group contribution method.
+        In general, users can use internal data of groupy that can be loaded by groupy.gp_loader.Loader
         """
         right_side_eq = 0.00
         for i in group_number:  # 这样写是取了字典的键
