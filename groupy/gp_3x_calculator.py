@@ -9,6 +9,9 @@ from groupy.gp_3x_counter import Counter
 
 
 class Calculator:
+    """
+    基于基团贡献法计算给定分子性质的类
+    """
     def __init__(self):
         self.loader = Loader()
         self.counter = Counter()
