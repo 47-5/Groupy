@@ -3,7 +3,7 @@ from rdkit import Chem
 import pandas as pd
 from joblib import Parallel, delayed
 
-from groupy.gp_3x_loader import Loader
+from groupy.gp_loader import Loader
 
 
 # tool
@@ -3360,7 +3360,7 @@ class Counter:
 
 
 # if __name__ == '__main__':
-#     print('debug gp_3x_counter.py ...')
+#     print('debug gp_counter.py ...')
 #     import time
 #
 #     t1 = time.time()

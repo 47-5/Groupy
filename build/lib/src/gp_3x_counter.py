@@ -3355,7 +3355,7 @@ class Counter:
 
 
 # if __name__ == '__main__':
-#     print('debug gp_3x_counter.py ...')
+#     print('debug gp_counter.py ...')
 #     import time
 #
 #     t1 = time.time()

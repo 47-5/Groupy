@@ -4,8 +4,8 @@ import pandas as pd
 from tqdm import tqdm
 from joblib import Parallel, delayed
 
-from groupy.gp_3x_loader import Loader
-from groupy.gp_3x_counter import Counter
+from groupy.gp_loader import Loader
+from groupy.gp_counter import Counter
 
 
 class Calculator:

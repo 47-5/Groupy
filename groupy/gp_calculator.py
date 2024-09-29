@@ -4,12 +4,13 @@ import pandas as pd
 from tqdm import tqdm
 from joblib import Parallel, delayed
 
-from groupy.gp_3x_loader import Loader
-from groupy.gp_3x_counter import Counter
+from groupy.gp_loader import Loader
+from groupy.gp_counter import Counter
 
 
 class Calculator:
     """
+    A Class for calculating properties of given molecules based on the group contribution method
     基于基团贡献法计算给定分子性质的类
     """
     def __init__(self):
@@ -23,6 +24,12 @@ class Calculator:
 
     @staticmethod
     def Tm(group_number, parameters):
+        """
+        Calculating the freezing (melting) point
+        计算冰点（熔点）
+        :param group_number: result of groupy.
+        :param parameters:
+        """
         right_side_eq = 0.00
         for i in group_number:  # 这样写是取了字典的键
             right_side_eq += group_number[i] * parameters[i]['Tm']

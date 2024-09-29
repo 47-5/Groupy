@@ -42,7 +42,7 @@ E-mail2: 1197748182@qq.com (may reply more quickly than E-mail1)
 
 
 # if __name__ == '__main__':
-#     print('debug gp_3x_tool.py')
+#     print('debug gp_tool.py')
 #
 #     t = Tool()
 #

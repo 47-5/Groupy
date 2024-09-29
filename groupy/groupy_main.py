@@ -1,11 +1,11 @@
 from rdkit import Chem
 
-from groupy.gp_3x_calculator import Calculator
-from groupy.gp_3x_counter import Counter
-from groupy.gp_3x_viewer import Viewer
-from groupy.gp_3x_convertor import Convertor
-from groupy.gp_3x_generator import Generator
-from groupy.gp_3x_tool import Tool, export_a_dict, logo
+from groupy.gp_calculator import Calculator
+from groupy.gp_counter import Counter
+from groupy.gp_viewer import Viewer
+from groupy.gp_convertor import Convertor
+from groupy.gp_generator import Generator
+from groupy.gp_tool import Tool, export_a_dict, logo
 
 
 def main_function_5():

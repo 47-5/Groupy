@@ -3,7 +3,7 @@ from rdkit import Chem
 import pandas as pd
 from joblib import Parallel, delayed
 
-from groupy.gp_3x_loader import Loader
+from groupy.gp_loader import Loader
 
 
 # tool
@@ -3218,15 +3218,6 @@ class Counter:
                 t_046, t_047, t_048, t_049, t_050, t_051, t_052, t_053, t_054, t_055, t_056, t_057, t_058, t_059, t_060,
                 t_061, t_062, t_063, t_064, t_065, t_066, t_067, t_068, t_069, t_070, t_071, t_072, t_073, t_074,
             ]
-        # basepath = os.path.abspath(__file__)
-        # folder = os.path.dirname(basepath)
-        # group_order_file_path = os.path.join(folder, 'group_order.xlsx')
-        # self.f_order_group_function_order = (
-        #         pd.read_excel(group_order_file_path, sheet_name='f')['index'] - 1).tolist()  # 减1是为了基团序号和列表索引对上,因为python列表里的索引是从0开始的
-        # self.s_order_group_function_order = (
-        #         pd.read_excel(group_order_file_path, sheet_name='s')['index'] - 1).tolist()  # 减1是为了基团序号和列表索引对上
-        # self.t_order_group_function_order = (
-        #         pd.read_excel(group_order_file_path, sheet_name='t')['index'] - 1).tolist()  # 减1是为了基团序号和列表索引对上
         self.f_order_group_function_order, self.s_order_group_function_order, self.t_order_group_function_order = self.loader.load_group_order()
 
     def count_a_mol(self, mol, clear_mode=False, add_note=False, add_smiles=False):
@@ -3360,7 +3351,7 @@ class Counter:
 
 
 # if __name__ == '__main__':
-#     print('debug gp_3x_counter.py ...')
+#     print('debug gp_counter.py ...')
 #     import time
 #
 #     t1 = time.time()
