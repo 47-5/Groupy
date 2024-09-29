@@ -20,14 +20,13 @@ class Calculator:
         self.parameters_simultaneous = self.loader.load_parameters(parameter_type='simultaneous', split=False)
 
     def __repr__(self):
-        return '这是一个使用基团贡献法计算分子性质的计算器'
+        return 'A Class for calculating properties of given molecules based on the group contribution method'
 
     @staticmethod
     def Tm(group_number, parameters):
         """
         Calculating the freezing (melting) point. When user call Calculator.calculate_a_mol(), this method will be called automatically.
-        In general, users do not need to call this function themselves
-        计算冰点（熔点）
+        In general, users do not need to call this function themselves.
         :param group_number: number of different groups in a given molecule.
         In general, users can use the result of groupy.gp_counter.Counter.count_a_mol()
         :param parameters: parameters used in group contribution method.
