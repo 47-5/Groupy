@@ -7,8 +7,14 @@ from tqdm import tqdm
 from joblib import Parallel, delayed
 from pprint import pprint
 
+from groupy.gp_tool import Tool
+
 
 class Convertor:
+    """
+    A class for converting between SMILES and different file formats (such as xyz, pdb, gro...). Users can call
+    Convertor.plot_supported_format() to print all supported file formats.
+    """
     def __init__(self):
         pass
 
@@ -17,21 +23,13 @@ class Convertor:
                 ' such as xyz, gro... or convert 3D chemical files to SMILES')
 
     @staticmethod
-    def load_smiles_iterator(smiles_file_path):
-        print('reading input file...')
-        if smiles_file_path.endswith('.txt'):
-            smiles_iterator = list(open(smiles_file_path))
-        elif smiles_file_path.endswith('.xlsx'):
-            smiles_iterator = pd.read_excel(smiles_file_path)['smiles']
-        elif smiles_file_path.endswith('.csv'):
-            smiles_iterator = pd.read_csv(smiles_file_path)['smiles']
-        else:
-            raise NotImplemented('无法识别的文件类型，请以.txt/.xlsx/.csv类型的文件作为输入。')
-        smiles_iterator = [i.strip() for i in smiles_iterator]
-        return smiles_iterator
-
-    @staticmethod
     def smi_to_xyz(smi, xyz_path=None):
+        """
+        Converting SMILES to xyz file.
+        :param smi: str. SMILES of a molecule
+        :param xyz_path: str. Path of xyz file you want to generate. Default={smi}.xyz
+        :return: bool. True if the xyz file is successfully generated.
+        """
         mol = Chem.MolFromSmiles(smi)
         if mol is None:
             print(f'can not read {smi}, please check your SMILES')
@@ -79,7 +77,13 @@ class Convertor:
         return True
 
     def batch_smi_to_xyz(self, smiles_file_path, xyz_root_path):
-        smiles_iterator = self.load_smiles_iterator(smiles_file_path=smiles_file_path)
+        """
+        Converting a batch of SMILES to xyz files.
+        :param smiles_file_path: str. Path of the file in which saved SMILES.
+        :param xyz_root_path: str. The folder path where all generated xyz files are saved.
+        :return: None.
+        """
+        smiles_iterator = Tool.load_smiles_iterator(smiles_file_path=smiles_file_path)
         mol_number = len(smiles_iterator)
         zfill_number = len(str(mol_number)) + 3
         print('reading completed，A total of {} molecules detected, start making xyz files...'.format(mol_number))
@@ -118,7 +122,15 @@ class Convertor:
         return None
 
     def batch_smi_to_xyz_mpi(self, smiles_file_path, xyz_root_path, n_jobs=1, batch_size='auto'):
-        smiles_iterator = self.load_smiles_iterator(smiles_file_path=smiles_file_path)
+        """
+        Converting a batch of SMILES to xyz files with MPI acceleration.
+        :param smiles_file_path: str. Path of the file in which saved SMILES.
+        :param xyz_root_path: str. The folder path where all generated xyz files are saved.
+        :param n_jobs: int. number of CPU cores you want to use when generating xyz file.
+        :param batch_size: int or str. Number of tasks per CPU core you want to use when generating xyz file. Default='auto'.
+        :return: None.
+        """
+        smiles_iterator = Tool.load_smiles_iterator(smiles_file_path=smiles_file_path)
         mol_number = len(smiles_iterator)
         zfill_number = len(str(mol_number)) + 3
         print('reading completed，A total of {} molecules detected, start making xyz files...'.format(mol_number))
@@ -137,6 +149,13 @@ class Convertor:
 
     @staticmethod
     def convert_file_type(in_format, in_path, out_format, out_path=None):
+        """
+        Converting file format.
+        :param in_format: str. Init format.
+        :param in_path: str. Init file path.
+        :param out_format: str. Target format.
+        :param out_path: str. Target file path. If set to None, out_path will be same as in_path except its suffix.
+        """
         try:
             mol = pybel.readfile(in_format, in_path).__next__()
             # print('The SMILES of this system is :')
@@ -152,6 +171,13 @@ class Convertor:
             return None
 
     def batch_convert_file_type(self, in_format, in_root_path, out_format, out_root_path=None):
+        """
+        Converting format of a batch of files.
+        :param in_format: str. Init format.
+        :param in_root_path: str. Path of the folder in which save files that you want to change format.
+        :param out_format: str. Target format.
+        :param out_root_path: str. Path of the folder where all new files are saved. If set to None, out_root_path will be same as in_root_path.
+        """
         if out_root_path is None:
             out_root_path = in_root_path
         else:
@@ -188,6 +214,15 @@ class Convertor:
         return None
 
     def batch_convert_file_type_mpi(self, in_format, in_root_path, out_format, out_root_path=None, n_jobs=1, batch_size='auto'):
+        """
+        Converting format of a batch of files with MPI acceleration.
+        :param in_format: str. Init format.
+        :param in_root_path: str. Path of the folder in which save files that you want to change format.
+        :param out_format: str. Target format.
+        :param out_root_path: str. Path of the folder where all new files are saved. If set to None, out_root_path will be same as in_root_path.
+        :param n_jobs: int. number of CPU cores you want to use when converting file format.
+        :param batch_size: int or str. Number of tasks per CPU core you want to use when converting file format. Default='auto'.
+        """
         if out_root_path is None:
             out_root_path = in_root_path
         else:
@@ -213,55 +248,10 @@ class Convertor:
     @staticmethod
     def file_to_smi(file_path, format=None):
         """
-        {'abinit': 'ABINIT Output Format', 'acesout': 'ACES output format', 'acr': 'ACR format',
-        'adfband': 'ADF Band output format', 'adfdftb': 'ADF DFTB output format', 'adfout': 'ADF output format',
-        'alc': 'Alchemy format', 'aoforce': 'Turbomole AOFORCE output format',
-        'arc': 'Accelrys/MSI Biosym/Insight II CAR format', 'axsf': 'XCrySDen Structure Format',
-        'bgf': 'MSI BGF format', 'box': 'Dock 3.5 Box format', 'bs': 'Ball and Stick format',
-        'c09out': 'Crystal 09 output format', 'c3d1': 'Chem3D Cartesian 1 format', 'c3d2': 'Chem3D Cartesian 2 format',
-        'caccrt': 'Cacao Cartesian format', 'can': 'Canonical SMILES format',
-        'car': 'Accelrys/MSI Biosym/Insight II CAR format', 'castep': 'CASTEP format', 'ccc': 'CCC format',
-        'cdjson': 'ChemDoodle JSON', 'cdx': 'ChemDraw binary format', 'cdxml': 'ChemDraw CDXML format',
-        'cif': 'Crystallographic Information File', 'ck': 'ChemKin format', 'cml': 'Chemical Markup Language',
-        'cmlr': 'CML Reaction format', 'cof': 'Culgi object file format', 'CONFIG': 'DL-POLY CONFIG',
-        'CONTCAR': 'VASP format', 'CONTFF': 'MDFF format', 'crk2d': 'Chemical Resource Kit diagram(2D)',
-        'crk3d': 'Chemical Resource Kit 3D format', 'ct': 'ChemDraw Connection Table format',
-        'cub': 'Gaussian cube format', 'cube': 'Gaussian cube format', 'dallog': 'DALTON output format',
-        'dalmol': 'DALTON input format', 'dat': 'Generic Output file format', 'dmol': 'DMol3 coordinates format',
-        'dx': 'OpenDX cube format for APBS', 'ent': 'Protein Data Bank format',
-        'exyz': 'Extended XYZ cartesian coordinates format', 'fa': 'FASTA format', 'fasta': 'FASTA format',
-        'fch': 'Gaussian formatted checkpoint file format', 'fchk': 'Gaussian formatted checkpoint file format',
-        'fck': 'Gaussian formatted checkpoint file format', 'feat': 'Feature format', 'fhiaims': 'FHIaims XYZ format',
-        'fract': 'Free Form Fractional format', 'fs': 'Fastsearch format', 'fsa': 'FASTA format',
-        'g03': 'Gaussian Output', 'g09': 'Gaussian Output', 'g16': 'Gaussian Output',
-        'g92': 'Gaussian Output', 'g94': 'Gaussian Output', 'g98': 'Gaussian Output', 'gal': 'Gaussian Output',
-        'gam': 'GAMESS Output', 'gamess': 'GAMESS Output', 'gamin': 'GAMESS Input', 'gamout': 'GAMESS Output',
-        'got': 'GULP format', 'gpr': 'Ghemical format', 'gro': 'GRO format', 'gukin': 'GAMESS-UK Input',
-        'gukout': 'GAMESS-UK Output', 'gzmat': 'Gaussian Z-Matrix Input', 'hin': 'HyperChem HIN format',
-        'HISTORY': 'DL-POLY HISTORY', 'inchi': 'InChI format', 'inp': 'GAMESS Input', 'ins': 'ShelX format',
-        'jin': 'Jaguar input format', 'jout': 'Jaguar output format', 'log': 'Generic Output file format',
-        'lpmd': 'LPMD format', 'mcdl': 'MCDL format', 'mcif': 'Macromolecular Crystallographic Info',
-        'MDFF': 'MDFF format', 'mdl': 'MDL MOL format', 'ml2': 'Sybyl Mol2 format',
-        'mmcif': 'Macromolecular Crystallographic Info', 'mmd': 'MacroModel format', 'mmod': 'MacroModel format',
-        'mol': 'MDL MOL format', 'mol2': 'Sybyl Mol2 format', 'mold': 'Molden format', 'molden': 'Molden format',
-        'molf': 'Molden format', 'moo': 'MOPAC Output format', 'mop': 'MOPAC Cartesian format',
-        'mopcrt': 'MOPAC Cartesian format', 'mopin': 'MOPAC Internal', 'mopout': 'MOPAC Output format',
-        'mpc': 'MOPAC Cartesian format', 'mpo': 'Molpro output format', 'mpqc': 'MPQC output format',
-        'mrv': 'Chemical Markup Language', 'msi': 'Accelrys/MSI Cerius II MSI format', 'nwo': 'NWChem output format',
-        'orca': 'ORCA output format', 'out': 'Generic Output file format', 'outmol': 'DMol3 coordinates format',
-        'output': 'Generic Output file format', 'pc': 'PubChem format', 'pcjson': 'PubChem JSON',
-        'pcm': 'PCModel Format', 'pdb': 'Protein Data Bank format', 'pdbqt': 'AutoDock PDBQT format',
-        'png': 'PNG 2D depiction', 'pos': 'POS cartesian coordinates format', 'POSCAR': 'VASP format',
-        'POSFF': 'MDFF format', 'pqr': 'PQR format', 'pqs': 'Parallel Quantum Solutions format',
-        'prep': 'Amber Prep format', 'pwscf': 'PWscf format', 'qcout': 'Q-Chem output format', 'res': 'ShelX format',
-        'rsmi': 'Reaction SMILES format', 'rxn': 'MDL RXN format', 'sd': 'MDL MOL format', 'sdf': 'MDL MOL format',
-        'siesta': 'SIESTA format', 'smi': 'SMILES format', 'smiles': 'SMILES format',
-        'smy': 'SMILES format using Smiley parser', 'sy2': 'Sybyl Mol2 format', 't41': 'ADF TAPE41 format',
-        'tdd': 'Thermo format', 'text': 'Read and write raw text', 'therm': 'Thermo format',
-        'tmol': 'TurboMole Coordinate format', 'txt': 'Title format', 'txyz': 'Tinker XYZ format',
-        'unixyz': 'UniChem XYZ format', 'VASP': 'VASP format', 'vmol': 'ViewMol format',
-        'wln': 'Wiswesser Line Notation', 'xml': 'General XML format', 'xsf': 'XCrySDen Structure Format',
-        'xyz': 'XYZ cartesian coordinates format', 'yob': 'YASARA.org YOB format'}
+        Converting a file into SMILES.
+        :param file_path: str. Path of the file.
+        :param format: str. Format of the file.
+        :return: SMILES
         """
         try:
             atoms = next(pybel.readfile(format=format, filename=file_path))
@@ -273,6 +263,13 @@ class Convertor:
             return 'There may something wrong in {}, please check it carefully!'.format(file_path)
 
     def batch_file_to_smi(self, in_format, in_root_path, out_root_path=None):
+        """
+        Converting a batch of files into SMILES.
+        :param in_format: str. Format of the file.
+        :param in_root_path: str. Path of the folder in which save files that you want to convert to SMILES.
+        :param out_root_path: str. Path of the folder in which save the file that save SMILES of molecules.
+                              If set to None, out_root_path will be same as in_root_path.
+        """
         if out_root_path is None:
             out_root_path = in_root_path
         else:
@@ -308,6 +305,15 @@ class Convertor:
         return smi_list
 
     def batch_file_to_smi_mpi(self, in_format, in_root_path, out_root_path=None, n_jobs=1, batch_size='auto'):
+        """
+        Converting a batch of files into SMILES with MPI acceleration.
+        :param in_format: str. Format of the file.
+        :param in_root_path: str. Path of the folder in which save files that you want to convert to SMILES.
+        :param out_root_path: str. Path of the folder in which save the file that save SMILES of molecules.
+                              If set to None, out_root_path will be same as in_root_path.
+        :param n_jobs: int. number of CPU cores you want to use when converting file to SMILES.
+        :param batch_size: int or str. Number of tasks per CPU core you want to use when converting file to SMILES. Default='auto'.
+        """
         if out_root_path is None:
             out_root_path = in_root_path
         else:
@@ -331,6 +337,10 @@ class Convertor:
         return smi_list
 
     def plot_supported_format(self):
+        """
+        print all supported file formats.
+        :return: None.
+        """
         openbabel_format = {'abinit': 'ABINIT Output Format', 'acesout': 'ACES output format', 'acr': 'ACR format',
         'adfband': 'ADF Band output format', 'adfdftb': 'ADF DFTB output format', 'adfout': 'ADF output format',
         'alc': 'Alchemy format', 'aoforce': 'Turbomole AOFORCE output format',
