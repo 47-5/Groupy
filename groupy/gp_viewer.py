@@ -8,10 +8,21 @@ from groupy.gp_convertor import Convertor
 
 
 class Viewer:
+    """
+    A class for visualizing SMILES and various chemical files. Users can call Viewer.plot_supported_format() to print
+    all supported file formats.
+    """
     def __init__(self):
         pass
 
     def view_mol(self, mol, mol_type='smi'):
+        """
+        visualizing SMILES and various chemical files
+        :param mol: str. SMILES of a molecule (at the same time, you have to set mol_type to be "smi").
+                    Or file path you want to view (at this time, you have to set mol_type to be the format of you file such as "xyz")
+        :param mol_type: str.
+        :return: None.
+        """
         if isinstance(mol, str):
             if mol_type in ['smi', 'smiles', 'SMILES']:
                 convertor = Convertor()
@@ -27,8 +38,13 @@ class Viewer:
                     mol = read(filename='temp.xyz', format='xyz')
                     os.remove('temp.xyz')
         view(mol)
+        return None
 
     def plot_supported_format(self):
+        """
+        print all supported file formats.
+        :return: None.
+        """
         ase_format = ase.io.formats.ioformats
         openbabel_format = {'abinit': 'ABINIT Output Format', 'acesout': 'ACES output format', 'acr': 'ACR format',
         'adfband': 'ADF Band output format', 'adfdftb': 'ADF DFTB output format', 'adfout': 'ADF output format',
