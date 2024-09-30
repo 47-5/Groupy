@@ -427,7 +427,7 @@ class Calculator:
                     'ISP': '?',
                     'note': 'There must be something wrong with this SMILES'}
 
-    def calculate_mols(self, smiles_file_path, properties_file_path='gp_3x_result.csv', check_hydrocarbon=True, parameter_type='simultaneous'):  # todo 还没实现不同步拟合的参数的使用
+    def calculate_mols(self, smiles_file_path, properties_file_path='gp_3x_result.csv', check_hydrocarbon=True, parameter_type='simultaneous'):
         """
         Calculating properties of a batch of molecules.
         :param smiles_file_path: path of the file(.txt, .xlsx, .csv) in which saved SMILES.

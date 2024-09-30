@@ -10,10 +10,21 @@ from groupy.gp_tool import Tool
 
 
 class Generator:
+    """
+    A Class for generating Gaussian Job File (gjf)
+    """
     def __init__(self):
         pass
 
     def calculate_charge(self, smi):
+        """
+        Calculating net charge (all proton - all charge) and all charge.
+        This method is used to calculate net charge which is used to generate gjf file.
+        Generator.calculate_multiplicity() also call this method to calculate multiplicity.
+        In general, users do not need to use this method.
+        :param smi: SMILES str or instance of rdkit.Chem.rdchem.Mol
+        :return: (int, int). (net charge, all charge)
+        """
         if isinstance(smi, str):
             smi = Chem.MolFromSmiles(smi)
         net_charge = 0
@@ -27,6 +38,15 @@ class Generator:
         return net_charge, all_charge
 
     def calculate_multiplicity(self, smi):
+        """
+        Calculating multiplicity to generate gjf files.
+        Generator.calculate_multiplicity() also call this method to calculate multiplicity.
+        In general, users do not need to use this method. We also do not recommend users to explicitly use this
+        function for calculating the multiplicity of their choice, as this method only considers the simplest
+        scenario, where alpha electrons pair with beta electrons as much as possible.
+        :param smi: SMILES str or instance of rdkit.Chem.rdchem.Mol
+        :return: (int, int). (net charge, all charge)
+        """
         if isinstance(smi, str):
             smi = Chem.MolFromSmiles(smi)
         net_charge, all_charge = self.calculate_charge(smi)
@@ -37,6 +57,22 @@ class Generator:
     def smi_to_gjf(self, smi, nproc='12', mem='12GB', chk_path=None, gjf_path=None,
                    gaussian_keywords=None, charge_and_multiplicity=None,
                    add_other_tasks=False, other_tasks:list=None):
+        """
+        Generating a gjf file based on SMILES of molecule.
+        :param smi: str. SMILES of a molecule.
+        :param nproc: str or int. The number of CPU cores allowed for Gaussian to utilize. Default=12.
+        :param mem: str. The amount of memory allocated for Gaussian to utilize. Default=12GB.
+        :param chk_path: str. Path of chk file. Default={smi}.chk
+        :param gjf_path: str. Path of gjf file you want to generate. Default={smi}.chk
+        :param gaussian_keywords: str. Keywords in gjf fie. Default='#p opt freq b3lyp/6-31g*'
+        :param charge_and_multiplicity: str. charge and multiplicity in gjf file. If set to None,
+                                        Generator will call Generator.calculate_charge() and
+                                        Generator.calculate_multiplicity() to calculate. example: '0 1'
+        :param add_other_tasks: bool. Whether to add other job into you gjf file. Default=False
+        :param other_tasks: list. Jobs you want to add into you gjf file. Default = ['#p m062x/def2tzvp geom=check',
+                    '#p m062x/def2tzvp scrf=solvent=water geom=check',]. Note that this parameter will only be used if add_other_tasks=True.
+        :return: bool. True if the gjf file is successfully generated.
+        """
         try:
             # default path of chk and gjf
             if chk_path is None:
@@ -90,11 +126,26 @@ class Generator:
             return False
 
     def batch_smi_to_gjf(self, smiles_file_path, gjf_root_path=None,
-                         nproc='12', mem='12GB', chk_path=None, gjf_path=None,
+                         nproc='12', mem='12GB',
                          gaussian_keywords=None, charge_and_multiplicity=None,
                          add_other_tasks=False, other_tasks: list = None,
                          index_start=0,
                          ):
+        """
+        Generating some gjf files based on a file in which saved some SMILES.
+        :param smiles_file_path: str. Path of the file in which saved SMILES.
+        :param gjf_root_path: str. The folder path where all generated gjf files are saved.
+        :param nproc: str or int. The number of CPU cores allowed for Gaussian to utilize. Default=12.
+        :param mem: str. The amount of memory allocated for Gaussian to utilize. Default=12GB.
+        :param gaussian_keywords: str. Keywords in gjf fie. Default='#p opt freq b3lyp/6-31g*'
+        :param charge_and_multiplicity: str. charge and multiplicity in gjf file. If set to None,
+                                        Generator will call Generator.calculate_charge() and
+                                        Generator.calculate_multiplicity() to calculate. example: '0 1'
+        :param add_other_tasks: bool. Whether to add other job into you gjf file. Default=False
+        :param other_tasks: list. Jobs you want to add into you gjf file. Default = ['#p m062x/def2tzvp geom=check',
+                    '#p m062x/def2tzvp scrf=solvent=water geom=check',]. Note that this parameter will only be used if add_other_tasks=True.
+        :return: None
+        """
         smiles_iterator = Tool.load_smiles_iterator(smiles_file_path=smiles_file_path)
         mol_number = len(smiles_iterator)
         zfill_number = len(str(mol_number)) + 5
@@ -140,12 +191,28 @@ class Generator:
         return None
 
     def batch_smi_to_gjf_mpi(self, smiles_file_path, gjf_root_path=None,
-                             nproc='12', mem='12GB', chk_path=None, gjf_path=None,
+                             nproc='12', mem='12GB',
                              gaussian_keywords=None, charge_and_multiplicity=None,
                              add_other_tasks=False, other_tasks: list = None,
-                             index_start=0,
                              n_jobs=1, batch_size='auto'
                          ):
+        """
+        Generating some gjf files based on a file in which saved some SMILES with MPI acceleration.
+        :param smiles_file_path: str. Path of the file in which saved SMILES.
+        :param gjf_root_path: str. The folder path where all generated gjf files are saved.
+        :param nproc: str or int. The number of CPU cores allowed for Gaussian to utilize. Default=12.
+        :param mem: str. The amount of memory allocated for Gaussian to utilize. Default=12GB.
+        :param gaussian_keywords: str. Keywords in gjf fie. Default='#p opt freq b3lyp/6-31g*'
+        :param charge_and_multiplicity: str. charge and multiplicity in gjf file. If set to None,
+                                        Generator will call Generator.calculate_charge() and
+                                        Generator.calculate_multiplicity() to calculate. example: '0 1'
+        :param add_other_tasks: bool. Whether to add other job into you gjf file. Default=False
+        :param other_tasks: list. Jobs you want to add into you gjf file. Default = ['#p m062x/def2tzvp geom=check',
+                    '#p m062x/def2tzvp scrf=solvent=water geom=check',]. Note that this parameter will only be used if add_other_tasks=True.
+        :param n_jobs: int. number of CPU cores you want to use when generating gjf file.
+        :param batch_size: int or str. Number of tasks per CPU core you want to use when generating gjf file. Default='auto'.
+        :return: None
+        """
         smiles_iterator = Tool.load_smiles_iterator(smiles_file_path=smiles_file_path)
         mol_number = len(smiles_iterator)
         zfill_number = len(str(mol_number)) + 5
@@ -172,6 +239,9 @@ class Generator:
     @staticmethod
     def write_gjf_link0_and_keyword(gjf_path, chk_path, nproc, mem, gaussian_keywords, charge_and_multiplicity, note,
                                     old_chk_path=None, add_link1=False):
+        """
+        Only used in Generator.smi_to_gjf()
+        """
         with open(gjf_path, 'a') as gjf:
             if add_link1:
                 gjf.write('--link1--' + '\n')
@@ -190,6 +260,9 @@ class Generator:
 
     @staticmethod
     def write_gjf_coord(gjf_path, xyz_path):
+        """
+        Only used in Generator.smi_to_gjf()
+        """
         xyz = open(xyz_path)
         with open(gjf_path, 'a') as gjf:
             for i in xyz.readlines()[2:]:
@@ -199,6 +272,9 @@ class Generator:
 
     @staticmethod
     def write_gjf_blank_line(gjf_path, blank_line_number=1):
+        """
+        Only used in Generator.smi_to_gjf()
+        """
         with open(gjf_path, 'a') as gjf:
             gjf.write('\n' * blank_line_number)
         return None
