@@ -3,6 +3,9 @@ import os
 
 
 class Loader:
+    """
+    A class for loading internal date of Groupy. Usually, users do not need to utilize this Python class.
+    """
     def __init__(self, ):
         basepath = os.path.abspath(__file__)
         folder_path1 = os.path.dirname(basepath)
@@ -23,6 +26,9 @@ class Loader:
             ]
 
     def load_parameters(self, parameter_type='simultaneous', split=False):
+        """
+        Loading parameters of group contribution method for groupy.gp_calculator.Calculator.
+        """
         assert parameter_type in ['simultaneous', 'step_wise'], '请确保参数类型为simultaneous或step_wise!'
         for path in self.parameters_path:
             try:
@@ -43,6 +49,9 @@ class Loader:
             return {**step_wise_first_order, **step_wise_second_order, **step_wise_third_order, **step_wise_universal_constants}
 
     def load_group_order(self):
+        """
+        Loading order of group for groupy.gp_counter.Counter
+        """
         for path in self.group_order_path:
             try:
                 f_order_group_function_order = (
