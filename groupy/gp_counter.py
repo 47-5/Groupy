@@ -6,6 +6,9 @@ from joblib import Parallel, delayed
 from groupy.gp_loader import Loader
 
 
+__all__ = ["Counter", ]
+
+
 # tool
 def has_non_aromatic_neighbor(atom):
     """判断原子周围是否有非芳香原子"""
@@ -3122,6 +3125,9 @@ def t_074(mol):
 
 
 class Counter:
+    """
+    A class for counting number of different groups in molecule.
+    """
     def __init__(self):
         self.loader = Loader()
 
@@ -3221,6 +3227,14 @@ class Counter:
         self.f_order_group_function_order, self.s_order_group_function_order, self.t_order_group_function_order = self.loader.load_group_order()
 
     def count_a_mol(self, mol, clear_mode=False, add_note=False, add_smiles=False):
+        """
+        Counting number of different groups of a molecule.
+        :param mol: instance of rdkit.Chem.rdchem.Mol or SMILES str which will be converter to rdkit.Chem.rdchem.Mol automatically.
+        :param clear_mode: bool. If set to True, The dictionary that stores the results will only retain groups with a count that is not zero. Default=False.
+        :param add_note: bool. If set to True, a note(SMILES of current molecule) will be added to the dictionary that stores the results, i.e. {note: SMILES}. Default=False.
+        :param add_smiles: bool. If set to True, The SMILES of current molecule will be added to the dictionary that stores the results, i.e. {smiles: SMILES}. Default=False.
+        :return: Dict. A dictionary that stores the results.
+        """
         init_smi = mol
         try:
             if isinstance(mol, str):
@@ -3242,7 +3256,15 @@ class Counter:
             print(f'Error! There is something wrong when counting {init_smi}, please check it.')
             return self.init_result.copy()
 
-    def count_mols(self, smiles_file_path, count_result_file_path='count_result.csv', add_note=False, add_smiles=False):  # todo mpi 并行？
+    def count_mols(self, smiles_file_path, count_result_file_path='count_result.csv', add_note=False, add_smiles=False):
+        """
+        Counting number of different groups of a batch of molecules.
+        :param smiles_file_path: str. Path of the file(.txt, .xlsx, .csv) in which saved SMILES of molecules.
+        :param count_result_file_path: str. path of result file. Default='count_result.csv'.
+        :param add_note: bool. If set to True, a note(SMILES of current molecule) will be added to the dictionary that stores the results, i.e. {note: SMILES}. Default=False.
+        :param add_smiles: bool. If set to True, The SMILES of current molecule will be added to the dictionary that stores the results, i.e. {smiles: SMILES}. Default=False.
+        :return: pandas Dataframe. A dictionary that stores the results.
+        """
         print('reading the input file...')
         if smiles_file_path.endswith('.txt'):
             smiles_iterator = list(open(smiles_file_path))
@@ -3267,6 +3289,16 @@ class Counter:
         return result
 
     def count_mols_mpi(self, smiles_file_path, count_result_file_path='count_result.csv', add_note=False, add_smiles=False, n_jobs=1, batch_size='auto'):
+        """
+        Counting number of different groups of a batch of molecules with MPI acceleration.
+        :param smiles_file_path: str. Path of the file(.txt, .xlsx, .csv) in which saved SMILES of molecules.
+        :param count_result_file_path: str. path of result file. Default='count_result.csv'.
+        :param add_note: bool. If set to True, a note(SMILES of current molecule) will be added to the dictionary that stores the results, i.e. {note: SMILES}. Default=False.
+        :param add_smiles: bool. If set to True, The SMILES of current molecule will be added to the dictionary that stores the results, i.e. {smiles: SMILES}. Default=False.
+        :param n_jobs: int. number of CPU cores you want to use when counting groups.
+        :param batch_size: int or str. Number of tasks per CPU core you want to use when counting groups. Default='auto'.
+        :return: pandas Dataframe. A dictionary that stores the results.
+        """
         print('reading the input file...')
         if smiles_file_path.endswith('.txt'):
             smiles_iterator = list(open(smiles_file_path))
@@ -3290,10 +3322,19 @@ class Counter:
         return result
 
     def get_group_fingerprint(self, mol):
+        """
+        Getting group style fingerprint of a molecule. In fact, this method just call Counter.count_a_mol() and convert its result to a list.
+        If users want to get fingerprint of a batch of molecules, they can use Counter.count_mols() or Counter.count_mols_mpi().
+        :param mol: instance of rdkit.Chem.rdchem.Mol or SMILES str which will be converter to rdkit.Chem.rdchem.Mol automatically.
+        :return: list. e.g. [1,2,0,0,.....]
+        """
         count_result = self.count_a_mol(mol=mol, clear_mode=False, add_note=False)
         return [value for key, value in count_result.items()]
 
     def count_1st_order_groups(self, mol, add_note=False):
+        """
+        counting number of 1st order groups. In general, users do not need to use this method since this method will be called when Counter.count_a_mol, Counter.count_mols, Counter.count_mols_mpi are called.
+        """
         atoms_index = set([i for i in range(len(mol.GetAtoms()))])  # 所有原子序号的集合
         used_atoms_index = set()
         for function_index in self.f_order_group_function_order:
@@ -3320,6 +3361,9 @@ class Counter:
         return None
 
     def count_2nd_order_groups(self, mol):
+        """
+        counting number of 2nd order groups. In general, users do not need to use this method since this method will be called when Counter.count_a_mol, Counter.count_mols, Counter.count_mols_mpi are called.
+        """
         s_order_group_in_mol = []
         for function_index in self.s_order_group_function_order:
             function = self.s_order_group_function[function_index]
@@ -3334,7 +3378,10 @@ class Counter:
                     self.result[function.__name__] += 1
         return None
 
-    def count_3rd_order_groups(self, mol):  # 跟count_2nd_order_groups几乎完全一样
+    def count_3rd_order_groups(self, mol):
+        """
+        counting number of 3rd order groups. In general, users do not need to use this method since this method will be called when Counter.count_a_mol, Counter.count_mols, Counter.count_mols_mpi are called.
+        """
         t_order_group_in_mol = []
         for function_index in self.t_order_group_function_order:
             function = self.t_order_group_function[function_index]

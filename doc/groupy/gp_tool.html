@@ -67,61 +67,75 @@
                         <label class="view-source-button" for="mod-gp_tool-view-source"><span>View Source</span></label>
 
                         <div class="pdoc-code codehilite"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos"> 1</span></a><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-</span><span id="L-2"><a href="#L-2"><span class="linenos"> 2</span></a>
+</span><span id="L-2"><a href="#L-2"><span class="linenos"> 2</span></a><span class="kn">from</span> <span class="nn">PIL.ImageSequence</span> <span class="kn">import</span> <span class="n">Iterator</span>
 </span><span id="L-3"><a href="#L-3"><span class="linenos"> 3</span></a>
-</span><span id="L-4"><a href="#L-4"><span class="linenos"> 4</span></a><span class="k">class</span> <span class="nc">Tool</span><span class="p">:</span>
-</span><span id="L-5"><a href="#L-5"><span class="linenos"> 5</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="L-6"><a href="#L-6"><span class="linenos"> 6</span></a>        <span class="k">pass</span>
-</span><span id="L-7"><a href="#L-7"><span class="linenos"> 7</span></a>
-</span><span id="L-8"><a href="#L-8"><span class="linenos"> 8</span></a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="L-9"><a href="#L-9"><span class="linenos"> 9</span></a>        <span class="k">return</span> <span class="s1">&#39;This is a object implemented some useful tools&#39;</span>
-</span><span id="L-10"><a href="#L-10"><span class="linenos">10</span></a>
-</span><span id="L-11"><a href="#L-11"><span class="linenos">11</span></a>    <span class="nd">@staticmethod</span>
-</span><span id="L-12"><a href="#L-12"><span class="linenos">12</span></a>    <span class="k">def</span> <span class="nf">load_smiles_iterator</span><span class="p">(</span><span class="n">smiles_file_path</span><span class="p">):</span>
-</span><span id="L-13"><a href="#L-13"><span class="linenos">13</span></a>        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;reading input file...&#39;</span><span class="p">)</span>
-</span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a>        <span class="k">if</span> <span class="n">smiles_file_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.txt&#39;</span><span class="p">):</span>
-</span><span id="L-15"><a href="#L-15"><span class="linenos">15</span></a>            <span class="n">smiles_iterator</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">smiles_file_path</span><span class="p">))</span>
-</span><span id="L-16"><a href="#L-16"><span class="linenos">16</span></a>        <span class="k">elif</span> <span class="n">smiles_file_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.xlsx&#39;</span><span class="p">):</span>
-</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a>            <span class="n">smiles_iterator</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="n">smiles_file_path</span><span class="p">)[</span><span class="s1">&#39;smiles&#39;</span><span class="p">]</span>
-</span><span id="L-18"><a href="#L-18"><span class="linenos">18</span></a>        <span class="k">elif</span> <span class="n">smiles_file_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.csv&#39;</span><span class="p">):</span>
-</span><span id="L-19"><a href="#L-19"><span class="linenos">19</span></a>            <span class="n">smiles_iterator</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">smiles_file_path</span><span class="p">)[</span><span class="s1">&#39;smiles&#39;</span><span class="p">]</span>
-</span><span id="L-20"><a href="#L-20"><span class="linenos">20</span></a>        <span class="k">else</span><span class="p">:</span>
-</span><span id="L-21"><a href="#L-21"><span class="linenos">21</span></a>            <span class="k">raise</span> <span class="bp">NotImplemented</span><span class="p">(</span><span class="s1">&#39;无法识别的文件类型，请以.txt/.xlsx/.csv类型的文件作为输入。&#39;</span><span class="p">)</span>
-</span><span id="L-22"><a href="#L-22"><span class="linenos">22</span></a>        <span class="n">smiles_iterator</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">smiles_iterator</span><span class="p">]</span>
-</span><span id="L-23"><a href="#L-23"><span class="linenos">23</span></a>        <span class="k">return</span> <span class="n">smiles_iterator</span>
-</span><span id="L-24"><a href="#L-24"><span class="linenos">24</span></a>
-</span><span id="L-25"><a href="#L-25"><span class="linenos">25</span></a>
-</span><span id="L-26"><a href="#L-26"><span class="linenos">26</span></a><span class="k">def</span> <span class="nf">export_a_dict</span><span class="p">(</span><span class="n">result_dict</span><span class="p">,</span> <span class="n">export_path</span><span class="o">=</span><span class="s1">&#39;result.csv&#39;</span><span class="p">):</span>
-</span><span id="L-27"><a href="#L-27"><span class="linenos">27</span></a>    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">result_dict</span><span class="p">])</span>
-</span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a>    <span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">export_path</span><span class="p">,</span> <span class="n">index_label</span><span class="o">=</span><span class="s1">&#39;index&#39;</span><span class="p">)</span>
-</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a>    <span class="k">return</span> <span class="kc">None</span>
-</span><span id="L-30"><a href="#L-30"><span class="linenos">30</span></a>
-</span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a>
-</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a><span class="n">logo</span> <span class="o">=</span> \
-</span><span id="L-33"><a href="#L-33"><span class="linenos">33</span></a><span class="sd">&#39;&#39;&#39;</span>
-</span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a><span class="sd">---------------------------------------------------------------------------------</span>
-</span><span id="L-35"><a href="#L-35"><span class="linenos">35</span></a><span class="sd">Groupy -- A Useful Tool for Molecular Analysis </span>
-</span><span id="L-36"><a href="#L-36"><span class="linenos">36</span></a><span class="sd">Developer: Ruichen Liu</span>
-</span><span id="L-37"><a href="#L-37"><span class="linenos">37</span></a><span class="sd">Hint: Please feel easy to contact the developer if you have any problems in use.</span>
-</span><span id="L-38"><a href="#L-38"><span class="linenos">38</span></a><span class="sd">E-mail1: liuruichen@tju.edu.cn</span>
-</span><span id="L-39"><a href="#L-39"><span class="linenos">39</span></a><span class="sd">E-mail2: 1197748182@qq.com (may reply more quickly than E-mail1)</span>
-</span><span id="L-40"><a href="#L-40"><span class="linenos">40</span></a><span class="sd">---------------------------------------------------------------------------------</span>
-</span><span id="L-41"><a href="#L-41"><span class="linenos">41</span></a><span class="sd">&#39;&#39;&#39;</span>
-</span><span id="L-42"><a href="#L-42"><span class="linenos">42</span></a>
-</span><span id="L-43"><a href="#L-43"><span class="linenos">43</span></a>
-</span><span id="L-44"><a href="#L-44"><span class="linenos">44</span></a><span class="c1"># if __name__ == &#39;__main__&#39;:</span>
-</span><span id="L-45"><a href="#L-45"><span class="linenos">45</span></a><span class="c1">#     print(&#39;debug gp_tool.py&#39;)</span>
-</span><span id="L-46"><a href="#L-46"><span class="linenos">46</span></a><span class="c1">#</span>
-</span><span id="L-47"><a href="#L-47"><span class="linenos">47</span></a><span class="c1">#     t = Tool()</span>
-</span><span id="L-48"><a href="#L-48"><span class="linenos">48</span></a><span class="c1">#</span>
-</span><span id="L-49"><a href="#L-49"><span class="linenos">49</span></a><span class="c1">#     t.smi_to_xyz(&#39;C1CCCC1&#39;)</span>
-</span><span id="L-50"><a href="#L-50"><span class="linenos">50</span></a><span class="c1">#     # t.batch_smi_to_xyz(smiles_file_path=r&#39;gp_3x_test_mol\SMILES.txt&#39;, xyz_root_path=&#39;test_xyz&#39;)</span>
-</span><span id="L-51"><a href="#L-51"><span class="linenos">51</span></a><span class="c1">#     # t.convert_file_type(in_format=&#39;xyz&#39;, in_path=&#39;C1CCCC1.xyz&#39;, out_format=&#39;mol2&#39;)</span>
-</span><span id="L-52"><a href="#L-52"><span class="linenos">52</span></a><span class="c1">#     # t.batch_convert_file_type(in_format=&#39;xyz&#39;, in_root_path=&#39;test_xyz&#39;, out_format=&#39;mol2&#39;, out_root_path=None)</span>
-</span><span id="L-53"><a href="#L-53"><span class="linenos">53</span></a><span class="c1">#     # t.batch_convert_file_type(in_format=&#39;xyz&#39;, in_root_path=&#39;test_xyz&#39;, out_format=&#39;mol2&#39;, out_root_path=&#39;test_mol2&#39;)</span>
-</span><span id="L-54"><a href="#L-54"><span class="linenos">54</span></a><span class="c1">#</span>
-</span><span id="L-55"><a href="#L-55"><span class="linenos">55</span></a><span class="c1">#     t.smi_to_gjf(smi=&#39;C1CCC1&#39;, add_other_std_tasks=True)</span>
-</span><span id="L-56"><a href="#L-56"><span class="linenos">56</span></a><span class="c1">#     t.batch_smi_to_gjf(smiles_file_path=r&#39;gp_3x_test_mol\SMILES.txt&#39;, gjf_root_path=&#39;test_gjf&#39;, add_other_std_tasks=True)</span>
+</span><span id="L-4"><a href="#L-4"><span class="linenos"> 4</span></a>
+</span><span id="L-5"><a href="#L-5"><span class="linenos"> 5</span></a><span class="k">class</span> <span class="nc">Tool</span><span class="p">:</span>
+</span><span id="L-6"><a href="#L-6"><span class="linenos"> 6</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-7"><a href="#L-7"><span class="linenos"> 7</span></a><span class="sd">    A class that implements some tools</span>
+</span><span id="L-8"><a href="#L-8"><span class="linenos"> 8</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="L-9"><a href="#L-9"><span class="linenos"> 9</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="L-10"><a href="#L-10"><span class="linenos">10</span></a>        <span class="k">pass</span>
+</span><span id="L-11"><a href="#L-11"><span class="linenos">11</span></a>
+</span><span id="L-12"><a href="#L-12"><span class="linenos">12</span></a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="L-13"><a href="#L-13"><span class="linenos">13</span></a>        <span class="k">return</span> <span class="s1">&#39;This is a object implemented some useful tools&#39;</span>
+</span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a>
+</span><span id="L-15"><a href="#L-15"><span class="linenos">15</span></a>    <span class="nd">@staticmethod</span>
+</span><span id="L-16"><a href="#L-16"><span class="linenos">16</span></a>    <span class="k">def</span> <span class="nf">load_smiles_iterator</span><span class="p">(</span><span class="n">smiles_file_path</span><span class="p">):</span>
+</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-18"><a href="#L-18"><span class="linenos">18</span></a><span class="sd">        Load SMILES iterator based on file path.</span>
+</span><span id="L-19"><a href="#L-19"><span class="linenos">19</span></a><span class="sd">        :param smiles_file_path: Path of a file in which save some SMILES. (txt, xlsx, csv)</span>
+</span><span id="L-20"><a href="#L-20"><span class="linenos">20</span></a><span class="sd">        :return: Iterator.</span>
+</span><span id="L-21"><a href="#L-21"><span class="linenos">21</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="L-22"><a href="#L-22"><span class="linenos">22</span></a>        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;reading input file...&#39;</span><span class="p">)</span>
+</span><span id="L-23"><a href="#L-23"><span class="linenos">23</span></a>        <span class="k">if</span> <span class="n">smiles_file_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.txt&#39;</span><span class="p">):</span>
+</span><span id="L-24"><a href="#L-24"><span class="linenos">24</span></a>            <span class="n">smiles_iterator</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">smiles_file_path</span><span class="p">))</span>
+</span><span id="L-25"><a href="#L-25"><span class="linenos">25</span></a>        <span class="k">elif</span> <span class="n">smiles_file_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.xlsx&#39;</span><span class="p">):</span>
+</span><span id="L-26"><a href="#L-26"><span class="linenos">26</span></a>            <span class="n">smiles_iterator</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="n">smiles_file_path</span><span class="p">)[</span><span class="s1">&#39;smiles&#39;</span><span class="p">]</span>
+</span><span id="L-27"><a href="#L-27"><span class="linenos">27</span></a>        <span class="k">elif</span> <span class="n">smiles_file_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.csv&#39;</span><span class="p">):</span>
+</span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a>            <span class="n">smiles_iterator</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">smiles_file_path</span><span class="p">)[</span><span class="s1">&#39;smiles&#39;</span><span class="p">]</span>
+</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a>        <span class="k">else</span><span class="p">:</span>
+</span><span id="L-30"><a href="#L-30"><span class="linenos">30</span></a>            <span class="k">raise</span> <span class="bp">NotImplemented</span><span class="p">(</span><span class="s1">&#39;无法识别的文件类型，请以.txt/.xlsx/.csv类型的文件作为输入。&#39;</span><span class="p">)</span>
+</span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a>        <span class="n">smiles_iterator</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">smiles_iterator</span><span class="p">]</span>
+</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a>        <span class="k">return</span> <span class="n">smiles_iterator</span>
+</span><span id="L-33"><a href="#L-33"><span class="linenos">33</span></a>
+</span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a>
+</span><span id="L-35"><a href="#L-35"><span class="linenos">35</span></a><span class="k">def</span> <span class="nf">export_a_dict</span><span class="p">(</span><span class="n">result_dict</span><span class="p">,</span> <span class="n">export_path</span><span class="o">=</span><span class="s1">&#39;result.csv&#39;</span><span class="p">):</span>
+</span><span id="L-36"><a href="#L-36"><span class="linenos">36</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-37"><a href="#L-37"><span class="linenos">37</span></a><span class="sd">    export a dict to .csv file</span>
+</span><span id="L-38"><a href="#L-38"><span class="linenos">38</span></a><span class="sd">    :param result_dict: dict. The dictionary you want to export.</span>
+</span><span id="L-39"><a href="#L-39"><span class="linenos">39</span></a><span class="sd">    :param export_path: Path of csv file you want to export.</span>
+</span><span id="L-40"><a href="#L-40"><span class="linenos">40</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="L-41"><a href="#L-41"><span class="linenos">41</span></a>    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">result_dict</span><span class="p">])</span>
+</span><span id="L-42"><a href="#L-42"><span class="linenos">42</span></a>    <span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">export_path</span><span class="p">,</span> <span class="n">index_label</span><span class="o">=</span><span class="s1">&#39;index&#39;</span><span class="p">)</span>
+</span><span id="L-43"><a href="#L-43"><span class="linenos">43</span></a>    <span class="k">return</span> <span class="kc">None</span>
+</span><span id="L-44"><a href="#L-44"><span class="linenos">44</span></a>
+</span><span id="L-45"><a href="#L-45"><span class="linenos">45</span></a>
+</span><span id="L-46"><a href="#L-46"><span class="linenos">46</span></a><span class="n">logo</span> <span class="o">=</span> \
+</span><span id="L-47"><a href="#L-47"><span class="linenos">47</span></a><span class="sd">&#39;&#39;&#39;</span>
+</span><span id="L-48"><a href="#L-48"><span class="linenos">48</span></a><span class="sd">---------------------------------------------------------------------------------</span>
+</span><span id="L-49"><a href="#L-49"><span class="linenos">49</span></a><span class="sd">Groupy -- A Useful Tool for Molecular Analysis </span>
+</span><span id="L-50"><a href="#L-50"><span class="linenos">50</span></a><span class="sd">Developer: Ruichen Liu</span>
+</span><span id="L-51"><a href="#L-51"><span class="linenos">51</span></a><span class="sd">Hint: Please feel easy to contact the developer if you have any problems in use.</span>
+</span><span id="L-52"><a href="#L-52"><span class="linenos">52</span></a><span class="sd">E-mail1: liuruichen@tju.edu.cn</span>
+</span><span id="L-53"><a href="#L-53"><span class="linenos">53</span></a><span class="sd">E-mail2: 1197748182@qq.com (may reply more quickly than E-mail1)</span>
+</span><span id="L-54"><a href="#L-54"><span class="linenos">54</span></a><span class="sd">---------------------------------------------------------------------------------</span>
+</span><span id="L-55"><a href="#L-55"><span class="linenos">55</span></a><span class="sd">&#39;&#39;&#39;</span>
+</span><span id="L-56"><a href="#L-56"><span class="linenos">56</span></a>
+</span><span id="L-57"><a href="#L-57"><span class="linenos">57</span></a>
+</span><span id="L-58"><a href="#L-58"><span class="linenos">58</span></a><span class="c1"># if __name__ == &#39;__main__&#39;:</span>
+</span><span id="L-59"><a href="#L-59"><span class="linenos">59</span></a><span class="c1">#     print(&#39;debug gp_tool.py&#39;)</span>
+</span><span id="L-60"><a href="#L-60"><span class="linenos">60</span></a><span class="c1">#</span>
+</span><span id="L-61"><a href="#L-61"><span class="linenos">61</span></a><span class="c1">#     t = Tool()</span>
+</span><span id="L-62"><a href="#L-62"><span class="linenos">62</span></a><span class="c1">#</span>
+</span><span id="L-63"><a href="#L-63"><span class="linenos">63</span></a><span class="c1">#     t.smi_to_xyz(&#39;C1CCCC1&#39;)</span>
+</span><span id="L-64"><a href="#L-64"><span class="linenos">64</span></a><span class="c1">#     # t.batch_smi_to_xyz(smiles_file_path=r&#39;gp_3x_test_mol\SMILES.txt&#39;, xyz_root_path=&#39;test_xyz&#39;)</span>
+</span><span id="L-65"><a href="#L-65"><span class="linenos">65</span></a><span class="c1">#     # t.convert_file_type(in_format=&#39;xyz&#39;, in_path=&#39;C1CCCC1.xyz&#39;, out_format=&#39;mol2&#39;)</span>
+</span><span id="L-66"><a href="#L-66"><span class="linenos">66</span></a><span class="c1">#     # t.batch_convert_file_type(in_format=&#39;xyz&#39;, in_root_path=&#39;test_xyz&#39;, out_format=&#39;mol2&#39;, out_root_path=None)</span>
+</span><span id="L-67"><a href="#L-67"><span class="linenos">67</span></a><span class="c1">#     # t.batch_convert_file_type(in_format=&#39;xyz&#39;, in_root_path=&#39;test_xyz&#39;, out_format=&#39;mol2&#39;, out_root_path=&#39;test_mol2&#39;)</span>
+</span><span id="L-68"><a href="#L-68"><span class="linenos">68</span></a><span class="c1">#</span>
+</span><span id="L-69"><a href="#L-69"><span class="linenos">69</span></a><span class="c1">#     t.smi_to_gjf(smi=&#39;C1CCC1&#39;, add_other_std_tasks=True)</span>
+</span><span id="L-70"><a href="#L-70"><span class="linenos">70</span></a><span class="c1">#     t.batch_smi_to_gjf(smiles_file_path=r&#39;gp_3x_test_mol\SMILES.txt&#39;, gjf_root_path=&#39;test_gjf&#39;, add_other_std_tasks=True)</span>
 </span></pre></div>
 
 
@@ -137,30 +151,40 @@
 
     </div>
     <a class="headerlink" href="#Tool"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="Tool-5"><a href="#Tool-5"><span class="linenos"> 5</span></a><span class="k">class</span> <span class="nc">Tool</span><span class="p">:</span>
-</span><span id="Tool-6"><a href="#Tool-6"><span class="linenos"> 6</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="Tool-7"><a href="#Tool-7"><span class="linenos"> 7</span></a>        <span class="k">pass</span>
-</span><span id="Tool-8"><a href="#Tool-8"><span class="linenos"> 8</span></a>
-</span><span id="Tool-9"><a href="#Tool-9"><span class="linenos"> 9</span></a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span id="Tool-10"><a href="#Tool-10"><span class="linenos">10</span></a>        <span class="k">return</span> <span class="s1">&#39;This is a object implemented some useful tools&#39;</span>
-</span><span id="Tool-11"><a href="#Tool-11"><span class="linenos">11</span></a>
-</span><span id="Tool-12"><a href="#Tool-12"><span class="linenos">12</span></a>    <span class="nd">@staticmethod</span>
-</span><span id="Tool-13"><a href="#Tool-13"><span class="linenos">13</span></a>    <span class="k">def</span> <span class="nf">load_smiles_iterator</span><span class="p">(</span><span class="n">smiles_file_path</span><span class="p">):</span>
-</span><span id="Tool-14"><a href="#Tool-14"><span class="linenos">14</span></a>        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;reading input file...&#39;</span><span class="p">)</span>
-</span><span id="Tool-15"><a href="#Tool-15"><span class="linenos">15</span></a>        <span class="k">if</span> <span class="n">smiles_file_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.txt&#39;</span><span class="p">):</span>
-</span><span id="Tool-16"><a href="#Tool-16"><span class="linenos">16</span></a>            <span class="n">smiles_iterator</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">smiles_file_path</span><span class="p">))</span>
-</span><span id="Tool-17"><a href="#Tool-17"><span class="linenos">17</span></a>        <span class="k">elif</span> <span class="n">smiles_file_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.xlsx&#39;</span><span class="p">):</span>
-</span><span id="Tool-18"><a href="#Tool-18"><span class="linenos">18</span></a>            <span class="n">smiles_iterator</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="n">smiles_file_path</span><span class="p">)[</span><span class="s1">&#39;smiles&#39;</span><span class="p">]</span>
-</span><span id="Tool-19"><a href="#Tool-19"><span class="linenos">19</span></a>        <span class="k">elif</span> <span class="n">smiles_file_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.csv&#39;</span><span class="p">):</span>
-</span><span id="Tool-20"><a href="#Tool-20"><span class="linenos">20</span></a>            <span class="n">smiles_iterator</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">smiles_file_path</span><span class="p">)[</span><span class="s1">&#39;smiles&#39;</span><span class="p">]</span>
-</span><span id="Tool-21"><a href="#Tool-21"><span class="linenos">21</span></a>        <span class="k">else</span><span class="p">:</span>
-</span><span id="Tool-22"><a href="#Tool-22"><span class="linenos">22</span></a>            <span class="k">raise</span> <span class="bp">NotImplemented</span><span class="p">(</span><span class="s1">&#39;无法识别的文件类型，请以.txt/.xlsx/.csv类型的文件作为输入。&#39;</span><span class="p">)</span>
-</span><span id="Tool-23"><a href="#Tool-23"><span class="linenos">23</span></a>        <span class="n">smiles_iterator</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">smiles_iterator</span><span class="p">]</span>
-</span><span id="Tool-24"><a href="#Tool-24"><span class="linenos">24</span></a>        <span class="k">return</span> <span class="n">smiles_iterator</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="Tool-6"><a href="#Tool-6"><span class="linenos"> 6</span></a><span class="k">class</span> <span class="nc">Tool</span><span class="p">:</span>
+</span><span id="Tool-7"><a href="#Tool-7"><span class="linenos"> 7</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="Tool-8"><a href="#Tool-8"><span class="linenos"> 8</span></a><span class="sd">    A class that implements some tools</span>
+</span><span id="Tool-9"><a href="#Tool-9"><span class="linenos"> 9</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="Tool-10"><a href="#Tool-10"><span class="linenos">10</span></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="Tool-11"><a href="#Tool-11"><span class="linenos">11</span></a>        <span class="k">pass</span>
+</span><span id="Tool-12"><a href="#Tool-12"><span class="linenos">12</span></a>
+</span><span id="Tool-13"><a href="#Tool-13"><span class="linenos">13</span></a>    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span id="Tool-14"><a href="#Tool-14"><span class="linenos">14</span></a>        <span class="k">return</span> <span class="s1">&#39;This is a object implemented some useful tools&#39;</span>
+</span><span id="Tool-15"><a href="#Tool-15"><span class="linenos">15</span></a>
+</span><span id="Tool-16"><a href="#Tool-16"><span class="linenos">16</span></a>    <span class="nd">@staticmethod</span>
+</span><span id="Tool-17"><a href="#Tool-17"><span class="linenos">17</span></a>    <span class="k">def</span> <span class="nf">load_smiles_iterator</span><span class="p">(</span><span class="n">smiles_file_path</span><span class="p">):</span>
+</span><span id="Tool-18"><a href="#Tool-18"><span class="linenos">18</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="Tool-19"><a href="#Tool-19"><span class="linenos">19</span></a><span class="sd">        Load SMILES iterator based on file path.</span>
+</span><span id="Tool-20"><a href="#Tool-20"><span class="linenos">20</span></a><span class="sd">        :param smiles_file_path: Path of a file in which save some SMILES. (txt, xlsx, csv)</span>
+</span><span id="Tool-21"><a href="#Tool-21"><span class="linenos">21</span></a><span class="sd">        :return: Iterator.</span>
+</span><span id="Tool-22"><a href="#Tool-22"><span class="linenos">22</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="Tool-23"><a href="#Tool-23"><span class="linenos">23</span></a>        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;reading input file...&#39;</span><span class="p">)</span>
+</span><span id="Tool-24"><a href="#Tool-24"><span class="linenos">24</span></a>        <span class="k">if</span> <span class="n">smiles_file_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.txt&#39;</span><span class="p">):</span>
+</span><span id="Tool-25"><a href="#Tool-25"><span class="linenos">25</span></a>            <span class="n">smiles_iterator</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">smiles_file_path</span><span class="p">))</span>
+</span><span id="Tool-26"><a href="#Tool-26"><span class="linenos">26</span></a>        <span class="k">elif</span> <span class="n">smiles_file_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.xlsx&#39;</span><span class="p">):</span>
+</span><span id="Tool-27"><a href="#Tool-27"><span class="linenos">27</span></a>            <span class="n">smiles_iterator</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="n">smiles_file_path</span><span class="p">)[</span><span class="s1">&#39;smiles&#39;</span><span class="p">]</span>
+</span><span id="Tool-28"><a href="#Tool-28"><span class="linenos">28</span></a>        <span class="k">elif</span> <span class="n">smiles_file_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.csv&#39;</span><span class="p">):</span>
+</span><span id="Tool-29"><a href="#Tool-29"><span class="linenos">29</span></a>            <span class="n">smiles_iterator</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">smiles_file_path</span><span class="p">)[</span><span class="s1">&#39;smiles&#39;</span><span class="p">]</span>
+</span><span id="Tool-30"><a href="#Tool-30"><span class="linenos">30</span></a>        <span class="k">else</span><span class="p">:</span>
+</span><span id="Tool-31"><a href="#Tool-31"><span class="linenos">31</span></a>            <span class="k">raise</span> <span class="bp">NotImplemented</span><span class="p">(</span><span class="s1">&#39;无法识别的文件类型，请以.txt/.xlsx/.csv类型的文件作为输入。&#39;</span><span class="p">)</span>
+</span><span id="Tool-32"><a href="#Tool-32"><span class="linenos">32</span></a>        <span class="n">smiles_iterator</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">smiles_iterator</span><span class="p">]</span>
+</span><span id="Tool-33"><a href="#Tool-33"><span class="linenos">33</span></a>        <span class="k">return</span> <span class="n">smiles_iterator</span>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>A class that implements some tools</p>
+</div>
+
 
                             <div id="Tool.load_smiles_iterator" class="classattr">
                                         <input id="Tool.load_smiles_iterator-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
@@ -174,23 +198,42 @@
 
     </div>
     <a class="headerlink" href="#Tool.load_smiles_iterator"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="Tool.load_smiles_iterator-12"><a href="#Tool.load_smiles_iterator-12"><span class="linenos">12</span></a>    <span class="nd">@staticmethod</span>
-</span><span id="Tool.load_smiles_iterator-13"><a href="#Tool.load_smiles_iterator-13"><span class="linenos">13</span></a>    <span class="k">def</span> <span class="nf">load_smiles_iterator</span><span class="p">(</span><span class="n">smiles_file_path</span><span class="p">):</span>
-</span><span id="Tool.load_smiles_iterator-14"><a href="#Tool.load_smiles_iterator-14"><span class="linenos">14</span></a>        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;reading input file...&#39;</span><span class="p">)</span>
-</span><span id="Tool.load_smiles_iterator-15"><a href="#Tool.load_smiles_iterator-15"><span class="linenos">15</span></a>        <span class="k">if</span> <span class="n">smiles_file_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.txt&#39;</span><span class="p">):</span>
-</span><span id="Tool.load_smiles_iterator-16"><a href="#Tool.load_smiles_iterator-16"><span class="linenos">16</span></a>            <span class="n">smiles_iterator</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">smiles_file_path</span><span class="p">))</span>
-</span><span id="Tool.load_smiles_iterator-17"><a href="#Tool.load_smiles_iterator-17"><span class="linenos">17</span></a>        <span class="k">elif</span> <span class="n">smiles_file_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.xlsx&#39;</span><span class="p">):</span>
-</span><span id="Tool.load_smiles_iterator-18"><a href="#Tool.load_smiles_iterator-18"><span class="linenos">18</span></a>            <span class="n">smiles_iterator</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="n">smiles_file_path</span><span class="p">)[</span><span class="s1">&#39;smiles&#39;</span><span class="p">]</span>
-</span><span id="Tool.load_smiles_iterator-19"><a href="#Tool.load_smiles_iterator-19"><span class="linenos">19</span></a>        <span class="k">elif</span> <span class="n">smiles_file_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.csv&#39;</span><span class="p">):</span>
-</span><span id="Tool.load_smiles_iterator-20"><a href="#Tool.load_smiles_iterator-20"><span class="linenos">20</span></a>            <span class="n">smiles_iterator</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">smiles_file_path</span><span class="p">)[</span><span class="s1">&#39;smiles&#39;</span><span class="p">]</span>
-</span><span id="Tool.load_smiles_iterator-21"><a href="#Tool.load_smiles_iterator-21"><span class="linenos">21</span></a>        <span class="k">else</span><span class="p">:</span>
-</span><span id="Tool.load_smiles_iterator-22"><a href="#Tool.load_smiles_iterator-22"><span class="linenos">22</span></a>            <span class="k">raise</span> <span class="bp">NotImplemented</span><span class="p">(</span><span class="s1">&#39;无法识别的文件类型，请以.txt/.xlsx/.csv类型的文件作为输入。&#39;</span><span class="p">)</span>
-</span><span id="Tool.load_smiles_iterator-23"><a href="#Tool.load_smiles_iterator-23"><span class="linenos">23</span></a>        <span class="n">smiles_iterator</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">smiles_iterator</span><span class="p">]</span>
-</span><span id="Tool.load_smiles_iterator-24"><a href="#Tool.load_smiles_iterator-24"><span class="linenos">24</span></a>        <span class="k">return</span> <span class="n">smiles_iterator</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="Tool.load_smiles_iterator-16"><a href="#Tool.load_smiles_iterator-16"><span class="linenos">16</span></a>    <span class="nd">@staticmethod</span>
+</span><span id="Tool.load_smiles_iterator-17"><a href="#Tool.load_smiles_iterator-17"><span class="linenos">17</span></a>    <span class="k">def</span> <span class="nf">load_smiles_iterator</span><span class="p">(</span><span class="n">smiles_file_path</span><span class="p">):</span>
+</span><span id="Tool.load_smiles_iterator-18"><a href="#Tool.load_smiles_iterator-18"><span class="linenos">18</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="Tool.load_smiles_iterator-19"><a href="#Tool.load_smiles_iterator-19"><span class="linenos">19</span></a><span class="sd">        Load SMILES iterator based on file path.</span>
+</span><span id="Tool.load_smiles_iterator-20"><a href="#Tool.load_smiles_iterator-20"><span class="linenos">20</span></a><span class="sd">        :param smiles_file_path: Path of a file in which save some SMILES. (txt, xlsx, csv)</span>
+</span><span id="Tool.load_smiles_iterator-21"><a href="#Tool.load_smiles_iterator-21"><span class="linenos">21</span></a><span class="sd">        :return: Iterator.</span>
+</span><span id="Tool.load_smiles_iterator-22"><a href="#Tool.load_smiles_iterator-22"><span class="linenos">22</span></a><span class="sd">        &quot;&quot;&quot;</span>
+</span><span id="Tool.load_smiles_iterator-23"><a href="#Tool.load_smiles_iterator-23"><span class="linenos">23</span></a>        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;reading input file...&#39;</span><span class="p">)</span>
+</span><span id="Tool.load_smiles_iterator-24"><a href="#Tool.load_smiles_iterator-24"><span class="linenos">24</span></a>        <span class="k">if</span> <span class="n">smiles_file_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.txt&#39;</span><span class="p">):</span>
+</span><span id="Tool.load_smiles_iterator-25"><a href="#Tool.load_smiles_iterator-25"><span class="linenos">25</span></a>            <span class="n">smiles_iterator</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">smiles_file_path</span><span class="p">))</span>
+</span><span id="Tool.load_smiles_iterator-26"><a href="#Tool.load_smiles_iterator-26"><span class="linenos">26</span></a>        <span class="k">elif</span> <span class="n">smiles_file_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.xlsx&#39;</span><span class="p">):</span>
+</span><span id="Tool.load_smiles_iterator-27"><a href="#Tool.load_smiles_iterator-27"><span class="linenos">27</span></a>            <span class="n">smiles_iterator</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="n">smiles_file_path</span><span class="p">)[</span><span class="s1">&#39;smiles&#39;</span><span class="p">]</span>
+</span><span id="Tool.load_smiles_iterator-28"><a href="#Tool.load_smiles_iterator-28"><span class="linenos">28</span></a>        <span class="k">elif</span> <span class="n">smiles_file_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.csv&#39;</span><span class="p">):</span>
+</span><span id="Tool.load_smiles_iterator-29"><a href="#Tool.load_smiles_iterator-29"><span class="linenos">29</span></a>            <span class="n">smiles_iterator</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">smiles_file_path</span><span class="p">)[</span><span class="s1">&#39;smiles&#39;</span><span class="p">]</span>
+</span><span id="Tool.load_smiles_iterator-30"><a href="#Tool.load_smiles_iterator-30"><span class="linenos">30</span></a>        <span class="k">else</span><span class="p">:</span>
+</span><span id="Tool.load_smiles_iterator-31"><a href="#Tool.load_smiles_iterator-31"><span class="linenos">31</span></a>            <span class="k">raise</span> <span class="bp">NotImplemented</span><span class="p">(</span><span class="s1">&#39;无法识别的文件类型，请以.txt/.xlsx/.csv类型的文件作为输入。&#39;</span><span class="p">)</span>
+</span><span id="Tool.load_smiles_iterator-32"><a href="#Tool.load_smiles_iterator-32"><span class="linenos">32</span></a>        <span class="n">smiles_iterator</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">smiles_iterator</span><span class="p">]</span>
+</span><span id="Tool.load_smiles_iterator-33"><a href="#Tool.load_smiles_iterator-33"><span class="linenos">33</span></a>        <span class="k">return</span> <span class="n">smiles_iterator</span>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>Load SMILES iterator based on file path.</p>
+
+<h6 id="parameters">Parameters</h6>
+
+<ul>
+<li><strong>smiles_file_path</strong>:  Path of a file in which save some SMILES. (txt, xlsx, csv)</li>
+</ul>
+
+<h6 id="returns">Returns</h6>
+
+<blockquote>
+  <p>Iterator.</p>
+</blockquote>
+</div>
+
 
                             </div>
                 </section>
@@ -205,14 +248,28 @@
 
     </div>
     <a class="headerlink" href="#export_a_dict"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="export_a_dict-27"><a href="#export_a_dict-27"><span class="linenos">27</span></a><span class="k">def</span> <span class="nf">export_a_dict</span><span class="p">(</span><span class="n">result_dict</span><span class="p">,</span> <span class="n">export_path</span><span class="o">=</span><span class="s1">&#39;result.csv&#39;</span><span class="p">):</span>
-</span><span id="export_a_dict-28"><a href="#export_a_dict-28"><span class="linenos">28</span></a>    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">result_dict</span><span class="p">])</span>
-</span><span id="export_a_dict-29"><a href="#export_a_dict-29"><span class="linenos">29</span></a>    <span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">export_path</span><span class="p">,</span> <span class="n">index_label</span><span class="o">=</span><span class="s1">&#39;index&#39;</span><span class="p">)</span>
-</span><span id="export_a_dict-30"><a href="#export_a_dict-30"><span class="linenos">30</span></a>    <span class="k">return</span> <span class="kc">None</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="export_a_dict-36"><a href="#export_a_dict-36"><span class="linenos">36</span></a><span class="k">def</span> <span class="nf">export_a_dict</span><span class="p">(</span><span class="n">result_dict</span><span class="p">,</span> <span class="n">export_path</span><span class="o">=</span><span class="s1">&#39;result.csv&#39;</span><span class="p">):</span>
+</span><span id="export_a_dict-37"><a href="#export_a_dict-37"><span class="linenos">37</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="export_a_dict-38"><a href="#export_a_dict-38"><span class="linenos">38</span></a><span class="sd">    export a dict to .csv file</span>
+</span><span id="export_a_dict-39"><a href="#export_a_dict-39"><span class="linenos">39</span></a><span class="sd">    :param result_dict: dict. The dictionary you want to export.</span>
+</span><span id="export_a_dict-40"><a href="#export_a_dict-40"><span class="linenos">40</span></a><span class="sd">    :param export_path: Path of csv file you want to export.</span>
+</span><span id="export_a_dict-41"><a href="#export_a_dict-41"><span class="linenos">41</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="export_a_dict-42"><a href="#export_a_dict-42"><span class="linenos">42</span></a>    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">result_dict</span><span class="p">])</span>
+</span><span id="export_a_dict-43"><a href="#export_a_dict-43"><span class="linenos">43</span></a>    <span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">export_path</span><span class="p">,</span> <span class="n">index_label</span><span class="o">=</span><span class="s1">&#39;index&#39;</span><span class="p">)</span>
+</span><span id="export_a_dict-44"><a href="#export_a_dict-44"><span class="linenos">44</span></a>    <span class="k">return</span> <span class="kc">None</span>
 </span></pre></div>
 
 
-    
+            <div class="docstring"><p>export a dict to .csv file</p>
+
+<h6 id="parameters">Parameters</h6>
+
+<ul>
+<li><strong>result_dict</strong>:  dict. The dictionary you want to export.</li>
+<li><strong>export_path</strong>:  Path of csv file you want to export.</li>
+</ul>
+</div>
+
 
                 </section>
                 <section id="logo">
