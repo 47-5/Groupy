@@ -1,7 +1,11 @@
 import pandas as pd
+from PIL.ImageSequence import Iterator
 
 
 class Tool:
+    """
+    A class that implements some tools
+    """
     def __init__(self):
         pass
 
@@ -10,6 +14,11 @@ class Tool:
 
     @staticmethod
     def load_smiles_iterator(smiles_file_path):
+        """
+        Load SMILES iterator based on file path.
+        :param smiles_file_path: Path of a file in which save some SMILES. (txt, xlsx, csv)
+        :return: Iterator.
+        """
         print('reading input file...')
         if smiles_file_path.endswith('.txt'):
             smiles_iterator = list(open(smiles_file_path))
@@ -24,6 +33,11 @@ class Tool:
 
 
 def export_a_dict(result_dict, export_path='result.csv'):
+    """
+    export a dict to .csv file
+    :param result_dict: dict. The dictionary you want to export.
+    :param export_path: Path of csv file you want to export.
+    """
     df = pd.DataFrame([result_dict])
     df.to_csv(export_path, index_label='index')
     return None
