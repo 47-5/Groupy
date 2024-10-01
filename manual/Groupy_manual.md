@@ -97,7 +97,7 @@ Groupy supports two main modes of operation, one that computes a single molecule
 
 When computing properties for an individual molecule, one can directly  provide the SMILES of the molecule. For instance, the SMILES of cyclohexane is `C1CCCC1`.
 
-#### 2.1.2 分子文件
+#### 2.1.2 molecule file
 
 A file recording some SMILES of molecules should be provided when one want to calculate properties of a batch of molecules.
 
@@ -162,7 +162,7 @@ After the installation is complete according to the instructions in Section 1.4,
 
 The program first displays a basic information, including the program name, developer, and developer contact information (users can contact the developer if they encounter any problems during use, and the developer will provide as much help as possible within their capabilities). Then the user's location (main interface) is displayed, and the program asks the user what operation to perform. The user only needs to enter the corresponding serial number to command the program to perform the corresponding task.
 
-##### 2.2.1.1 退出(q)
+##### 2.2.1.1 Exit (q)
 
 To exit the program gracefully, just enter `q` in the main interface and press `Enter` on the keyboard, as shown in Figure 2.2.
 
@@ -186,7 +186,7 @@ Then a window with the 3D structure of the molecule will pop up, as shown in Fig
 
 <div align = "center">Figure 2.4 3D structure of a molecule</div>
 
-##### 2.2.1.2.2 Visualizing molecules based on a file
+###### 2.2.1.2.2 Visualizing molecules based on a file
 
 After starting Groupy, enter `0`-`2`-`file path you want to Visualizing`-`file format you used` in sequence, as shown in Figure 2.5.
 
@@ -258,7 +258,7 @@ There is almost no difference between the usage of main function -4 introduced i
 
 Although the group contribution method is versatile and computationally  efficient, its accuracy is limited. Therefore, in addition to the group  contribution method itself, this program also provides users with  functionality for visualization and generating files required for  molecular dynamics and quantum chemical calculations. This feature is  particularly useful when initially screening with the group contribution method and subsequently refining with higher-precision methods.
 
-###### 2.2.1.8.1 Converting SMILES to xyz file (5_1)
+###### 2.2.1.9.1 Converting SMILES to xyz file (5_1)
 
 The xyz file (http://sobereva.com/477) is almost the simplest file format for recording the three-dimensional structure of a molecule. Almost all visualization programs can open it (such as gaussview, VESTA, VMD, etc.).
 
@@ -268,7 +268,7 @@ The xyz file (http://sobereva.com/477) is almost the simplest file format for re
 
 <div align = "center">Figure 2.13 sub-function 1 of main function 5</div>
 
-###### 2.2.1.8.2 Converting a batch of SMILES to xyz files (5_2)
+###### 2.2.1.9.2 Converting a batch of SMILES to xyz files (5_2)
 
 If the user needs to generate a batch of xyz files for molecules, he needs to first prepare a molecular file introduced in Section 2.1.2, then enter `file` in the main interface, press `Enter` on the keyboard, then enter `2` and press `Enter`, and enter the required instructions according to the subsequent prompts, as shown in Figure 2.14.
 
@@ -276,11 +276,11 @@ If the user needs to generate a batch of xyz files for molecules, he needs to fi
 
 <div align = "center">Figure 2.14 sub-function 2 of main function 5</div>
 
-###### 2.2.1.8.3 Converting a batch of SMILES to xyz files with MPI acceleration (5_-2)
+###### 2.2.1.9.3 Converting a batch of SMILES to xyz files with MPI acceleration (5_-2)
 
 There is almost no difference between the usage of sub function -2 of main function 5 introduced in this section and main function -3 introduced in 2.2.1.6.
 
-###### 2.2.1.8.4 Converting file format (5_3)
+###### 2.2.1.9.4 Converting file format (5_3)
 
 This program also provides the function of converting file formats. Users only need to provide the original file format and its path to be converted, and then specify the required file format and path, as shown in Figure 2.15. **This function of this program is based on openbabel, so this function supports all file formats supported by openbabel, such as: xyz, mol, mol2, pdb...**
 
@@ -288,45 +288,63 @@ This program also provides the function of converting file formats. Users only n
 
 <div align = "center">Figure 2.15 sub-function 3 of main function 5</div>
 
-###### 2.2.1.8.5 批量转化给定文件的文件格式(file_4)
+###### 2.2.1.9.5 Converting format of a batch of files (5_4)
 
-当需要转化一批文件的文件格式时，首先应把待转换格式的文件放入同一个文件夹。然后进入主功能`file`的子功能`4`，首先程序会询问用户待转换的文件格式如何，然后还需输入待转换格式的文件的根目录（即保存了所有带转换格式的文件的目录）。接着程序问用户希望将文件转化为什么格式，用户输入之后（如xyz，mol，mol2，pdb，gro等），程序要求用户指定转化之后的新文件的根目录（即所有新产生的文件都将保存在那里），若直接敲击`Enter`，将会使用待转换格式的文件的根目录。具体操作见图2.15。
+When you need to convert the file formats of a batch of files, you should first put the files to be converted into the same folder. Then enter the sub-function `4` of the main function `5`. First, the program will ask the user what the file format is to be converted, and then you need to enter the root directory of the file to be converted (that is, the directory where all the files you want to convert are saved). Then the program asks the user what format he wants to convert the file to. After the user enters (such as xyz, mol, mol2, pdb, gro, etc.), the program requires the user to specify the root directory of the new file after conversion (that is, all newly generated files will be saved there). See Figure 2.16 for specific operations.
 
-![](C:\Users\lrc\Desktop\group_contribution_3.2_dev\document\figure\main_file_4.png)
+![](.\figure\main_5_sub_4.png)
 
-<div align = "center">图2.15 GC程序的主功能file_4 </div>
+<div align = "center">Figure 2.16 sub-function 4 of main function 5</div>
+
+###### 2.2.1.9.6 Converting format of a batch of files with MPI acceleration (5_-4)
+
+There is almost no difference between the usage of sub function -4 of main function 5 introduced in this section and main function -3 introduced in 2.2.1.6.
+
+###### 2.2.1.9.7 Converting a file to SMILES (5_5)
+
+One can convert a file (xyz, mol2, ...) to a SMILES, as shown in Figure 2.17.
+
+![](./figure/main_5_sub_5.png)
+
+<div align = "center">Figure 2.17 sub-function 5 of main function 5</div>
+
+The result will be printed on the screen.
+
+###### 2.2.1.9.8 Converting a batch of files to SMILES (5_6)
+
+When users want to convert a batch of files to SMILES, they can use the sub-function 6 of main function 5, as shown in Figure 2.18.
+
+![](./figure/main_5_sub_6.png)
+
+<div align = "center">Figure 2.18 sub-function 6 of main function 5</div>
+
+###### 2.2.1.9.9 Converting a file to SMILES with MPI acceleration (5_-6)
+
+There is almost no difference between the usage of sub function -6 of main function 5 introduced in this section and main function -3 introduced in 2.2.1.6.
+
+###### 2.2.1.9.10 Generating .gjf(input file of Gaussian) file by input SMILES of a molecule (5_7)
+
+The program also offers users the capability to generate Gaussian input  files (gjf files) based on the SMILES of molecules. Users simply need to access the sub-function 7 of the main function 5 and follow the prompts accordingly, as depicted in Figure 2.19.
+
+![](./figure/main_5_sub_7.png)
+
+<div align = "center">Figure 2.19 sub-function 7 of main function 5</div>
+
+###### 2.2.1.9.11 Generating a batch of .gjf files (5_8)
+
+The gjf file of molecules can also be generated in batches. Groupy asks the user to enter the file path of the file that records the SMILES of a batch of molecules, and the program will automatically read the SMILES recorded in it. The program then asks the user to enter the root directory to save the generated gjf file (that is, all the generated gjf files in this task are saved there), after the user enters the gjf file generation. See Figure 2.20 for detailed operations.
+
+![](.\figure\main_5_sub_8.png)
+
+<div align = "center">Figure 2.20 sub-function 8 of main function 5</div>
 
 
 
-###### 2.2.1.8.6 基于SMILES生成gjf文件(file_5)
+###### 2.2.1.8.12 Generating a batch of .gjf files with MPI acceleration (5_-8)
 
-本程序还为用户提供了基于分子的SMILES生成对应的gjf文件（量子化学计算软件Gaussian的输入文件）。用户只需进入主功能file中的子功能5，然后根据提示操作即可，见图2.16。
+There is almost no difference between the usage of sub function -8 of main function 5 introduced in this section and main function -3 introduced in 2.2.1.6.
 
-![](C:\Users\lrc\Desktop\group_contribution_3.2_dev\document\figure\main_file_5.png)
-
-<div align = "center">图2.16 GC程序的主功能file_5 </div>
-
-若用户对这里提供的接口（如高斯调用的CPU核数、内存数目、关键词、chk文件路径）不甚了解，可以参考量子化学软件Gaussian的用户手册或相关论文，也可联系开发者，或可得到一些帮助。
-
-
-
-###### 2.2.1.8.7 批量生成gjf文件(file_6)
-
-还可以批量生成分子的gjf文件，程序要求用户输入记录了一批分子的SMILES的文件，在用户输入文件路径（特别提醒：Windows和Linux下路径的格式略有不同！分子文件中不要有空行！）然后敲击`Enter`后，程序会自动读取分子文件中记录的SMILES。然后程序要求用户输入保存被生成出的gjf文件的根目录（即本次任务所有生成的gjf文件都保存在那里），用户输入之后开始生成gjf文件。在生成结束后，程序会在主目录下产生两个文件，分别是记录成功生成gjf文件的SMILES（gjf_succeed.txt）和没有成功生成gjf文件的SMILES（gjf_fail.txt）。具体操作步骤见图2.17。
-
-![](C:\Users\lrc\Desktop\group_contribution_3.2_dev\document\figure\main_file_6.png)
-
-<div align = "center">图2.17 GC程序的主功能file_6 </div>
-
-
-
-###### 2.2.1.8.8 基于MPI并行批量生成生成gjf文件(file_-6)
-
-现代计算机的中央处理器（CPU）往往是多核的，若在批量生成gjf文件时希望充分利用CPU的性能，可以使用MPI并计算。
-
- 
-
-#### 2.2.2 GC作为外部库
+#### 2.2.2 Groupy as an external Python library
 
 The program can also be imported as an external library into user-written python scripts. We only give an example here, for more details, please refer to the API documentation in Groupy/doc
 

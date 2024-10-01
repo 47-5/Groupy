@@ -16,7 +16,7 @@ def main_function_5():
             '--------------------------------------------------------------------------------- \n'
             'You are in main function 5 \n'
             'what to do? \n'
-            'help. print all supported file formats on screen.'
+            'help. print all supported file formats on screen. \n'
             ' 0. return to main interface. \n'
             ' 1. generate a .xyz file by input SMILES of a molecule. \n'
             ' 2. generate a batch of .xyz files.                    -2. use mpi to accelerate.\n'
