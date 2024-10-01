@@ -65,31 +65,43 @@ Groupy consists of 6 modules, namely Loader, Counter, Calculator, Convertor, Vie
 
 <div align = "center">Figure1. Architecture and the modular map of Groupy code. The direction of the arrows indicates the direction of the data, the rounded gray boxes represents the module in Groupy, and the white boxes represents the input or output data. </div>
 
-## 2 快速入门
+### 1.4 Install
 
-本节介绍如何使用该程序计算分子的理化性质和统计给定分子的基团数目，以及一些其他的主要功能。
+Download the source code:
 
+`git clone https://github.com/47-5/Groupy.git`
 
+One may create an environment using Anaconda:
 
-### 2.1 输入和输入文件
+`conda create -n groupy_env python=3.10`
 
-Group Contribution 支持两种运行模式，一种运行模式是计算单个分子，另一种是批量计算给定文件中记录的所有分子。
+`conda activate groupy_env`
 
+Install:
 
+`pip install .\Groupy\dist\groupy-3.0.0.tar.gz`
 
-#### 2.1.1 单个分子
+`conda install -c conda-forge openbabel`(**Do not** use `pip install openbabel` )
 
-计算单个分子时可以直接给出给定分子SMILES，如环己烷的SMILES为`C1CCCC1`。
+Then one can enter `Groupy` in terminal to start the Groupy.
 
+## 2 Quick start
 
+This section describes how to use the program to calculate the physical and chemical properties of a molecule and to count the number of groups of a given molecule, as well as some other main functions.
+
+### 2.1 Input and input file
+
+Groupy supports two main modes of operation, one that computes a single molecule and the other that computes all molecules recorded in a given file in batches.
+
+#### 2.1.1 Single molecule
+
+When computing properties for an individual molecule, one can directly  provide the SMILES of the molecule. For instance, the SMILES of cyclohexane is `C1CCCC1`.
 
 #### 2.1.2 分子文件
 
-当需要批量计算大量分子时，需要给出记录分子SMILES的文件，目前支持的文件格式包括：`.txt`,`.csv`,`.xlsx`。
+A file recording some SMILES of molecules should be provided when one want to calculate properties of a batch of molecules.
 
-其格式可按如下书写：
-
-
+Its format can be written as follows:
 
 ##### 2.1.2.1 txt
 
@@ -106,23 +118,19 @@ C=C=CC
 C=C=C(C)C
 ```
 
-每行只有一个分子的SMILES（不要有空格），不要有空行。
-
-
+There should be only one molecule's SMILES per line (no spaces), and no blank lines.
 
 ##### 2.1.2.2 csv
 
+```shell
+index,smiles,molar_mass,
+0,CC,30.069999999999993,
+1,C1CC1,42.08100000000002,
+2,CCC,44.09700000000002, 
+3,C1CCC1,56.10800000000002, 
 ```
-index,smiles,molar_mass
-0,CC,30.069999999999993
-1,C1CC1,42.08100000000002 
-2,CCC,44.09700000000002 
-3,C1CCC1,56.10800000000002 
-```
 
-格式比较自由，只要有一列列名为`smiles`的列即可，其余数据会被忽视，但不要有空行。
-
-
+The format is free, as long as there is a column named `smiles`, the rest of the data will be ignored, but there should be no blank lines.
 
 ##### 2.1.2.3 xlsx
 
@@ -134,47 +142,35 @@ index,smiles,molar_mass
 | 3     | C1CCC1 | 56.108     |
 | 4     | CC1CC1 | 56.108     |
 
-格式比较自由，只要有一列列名为`smiles`的列即可，其余数据会被忽视，但不要有空行。
+The format is free, as long as there is a column named `smiles`, the rest of the data will be ignored, but there should be no blank lines.
 
+### 2.2 Run Groupy
 
+When utilizing this program, users can employ Groupy as a standalone  application. Additionally, to retain the maximum extensibility of Python itself, users can import this program as an external library into  Python scripts they create themselves.
 
-### 2.2 运行方式
+The two distinct ways of utilizing Groupy are outlined below.
 
-在使用本程序时，用户可以直接使用我们提供的主程序`main.py`。同时，为了保留python本身最大的可拓展性，用户也可以将本程序作为外部库导入进用户自行编写的python脚本中。
+#### 2.2.1 Groupy as a standalone program
 
-下面分别介绍这两种使用方式。
+**Note: The system I used when writing this manual is Windows 11, and the terminal is Anaconda Powershell Prompt provided by Anaconda, which supports some common commands in Linux and supports both Linux and Windows path formats. Please distinguish the file path formats of different systems when using it! **
 
+After the installation is complete according to the instructions in Section 1.4, enter `Groupy` in the terminal to start Groupy. The user will see the main interface as shown in Figure 2.1:
 
+![](.\figure\main_interface.png)
 
-#### 2.2.1 GC作为独立程序
+<div align = "center">Figure 2.1 Main interface of Groupy</div>
 
-**注意，笔者在编写手册时使用的系统时Windows 11，终端是Anaconda提供的Anaconda Powershell Prompt，其中支持一些Linux中的常用命令，而且同时支持Linux和Windows的路径格式，请用户在使用时自行区分不同系统的文件路径格式！**
-
-当配置好1.2小节中的环境后，在本程序的主目录下进入终端后，只需输入：
-
-```shell
-python main.py
-```
-
-即可进入GC的主程序，用户将看到如图2.1所示的主界面：
-
-![](C:\Users\lrc\Desktop\group_contribution_3.2_dev\document\figure\主程序界面.png)
-
-<div align = "center">图2.1 GC程序的主界面</div>
-
-程序最开始显示一段基本信息，包括程序名、开发者以及开发者的联系方式（用户在使用中遇到任何问题都可联系开发者，开发者会在能力范围内尽可能提供帮助）。然后显示用户所处位置（主界面），程序询问用户要做什么操作，用户只需输入对应的序号即可命令程序执行相应的任务。
-
-
+The program first displays a basic information, including the program name, developer, and developer contact information (users can contact the developer if they encounter any problems during use, and the developer will provide as much help as possible within their capabilities). Then the user's location (main interface) is displayed, and the program asks the user what operation to perform. The user only needs to enter the corresponding serial number to command the program to perform the corresponding task.
 
 ##### 2.2.1.1 退出(q)
 
-若要优雅地退出本程序，只需在主界面内输入`q`然后在键盘上敲击`Enter`即可，如图2.2所示。
+To exit the program gracefully, just enter `q` in the main interface and press `Enter` on the keyboard, as shown in Figure 2.2.
 
-![](C:\Users\lrc\Desktop\group_contribution_3.2_dev\document\figure\main_q.png)
+![](.\figure\main_q.png)
 
-<div align = "center">图2.2 GC程序的退出</div>
+<div align = "center">Figure 2.2 Exit of Groupy</div>
 
-程序正常退出后，自动退回了终端。
+##### 2.2.1.2 Visualizing molecules (0)
 
 
 
