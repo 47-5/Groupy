@@ -258,7 +258,7 @@ There is almost no difference between the usage of main function -4 introduced i
 
 Although the group contribution method is versatile and computationally  efficient, its accuracy is limited. Therefore, in addition to the group  contribution method itself, this program also provides users with  functionality for visualization and generating files required for  molecular dynamics and quantum chemical calculations. This feature is  particularly useful when initially screening with the group contribution method and subsequently refining with higher-precision methods.
 
-###### 2.2.1.8.1 Converting SMILES to xyz file (5-1)
+###### 2.2.1.8.1 Converting SMILES to xyz file (5_1)
 
 The xyz file (http://sobereva.com/477) is almost the simplest file format for recording the three-dimensional structure of a molecule. Almost all visualization programs can open it (such as gaussview, VESTA, VMD, etc.).
 
@@ -268,51 +268,25 @@ The xyz file (http://sobereva.com/477) is almost the simplest file format for re
 
 <div align = "center">Figure 2.13 sub-function 1 of main function 5</div>
 
-###### 2.2.1.8.2 Converting a batch of SMILES to xyz files (5-2)
+###### 2.2.1.8.2 Converting a batch of SMILES to xyz files (5_2)
 
 If the user needs to generate a batch of xyz files for molecules, he needs to first prepare a molecular file introduced in Section 2.1.2, then enter `file` in the main interface, press `Enter` on the keyboard, then enter `2` and press `Enter`, and enter the required instructions according to the subsequent prompts, as shown in Figure 2.14.
 
-![](C:\Users\lrc\Desktop\group_contribution_3.2_dev\document\figure\main_file_2.png)
+![](.\figure\main_5_sub_2.png)
 
-<div align = "center">Figure 2.13 sub-function 2 of main function 5</div>
+<div align = "center">Figure 2.14 sub-function 2 of main function 5</div>
 
-当用户进入主功能file的子功能2时，程序要求用户输入记录了一批分子的SMILES的文件，在用户输入文件路径（特别提醒：Windows和Linux下路径的格式略有不同！分子文件中不要有空行！）然后敲击`Enter`后，程序会自动读取分子文件中记录的SMILES。然后程序要求用户输入保存被生成出的xyz文件的根目录（即本次任务所有生成的xyz文件都保存在那里），用户输入之后开始生成xyz文件。在生成结束后，程序会在主目录下产生两个文件，分别是记录成功生成xyz文件的SMILES（xyz_succeed.txt）和没有成功生成xyz文件的SMILES（xyz_fail.txt）。
+###### 2.2.1.8.3 Converting a batch of SMILES to xyz files with MPI acceleration (5_-2)
 
+There is almost no difference between the usage of sub function -2 of main function 5 introduced in this section and main function -3 introduced in 2.2.1.6.
 
+###### 2.2.1.8.4 Converting file format (5_3)
 
-###### 2.2.1.8.3 基于MPI并行批量生成xyz文件(file_-2)
+This program also provides the function of converting file formats. Users only need to provide the original file format and its path to be converted, and then specify the required file format and path, as shown in Figure 2.15. **This function of this program is based on openbabel, so this function supports all file formats supported by openbabel, such as: xyz, mol, mol2, pdb...**
 
-现代计算机的中央处理器（CPU）往往是多核的，若在批量生成xyz文件时希望充分利用CPU的性能，可以使用MPI并计算。
+![](.\figure\main_5_sub_3.png)
 
-若用户需要生成一批分子的xyz文件，需要先准备一个2.1.2小节中介绍的分子文件，然后在主界面内输入`file`，然后在键盘上敲击`Enter`，在输入`-2`并敲击`Enter`，根据后续的提示输入所需指令即可，如图2.12所示。
-
-![](C:\Users\lrc\Desktop\group_contribution_3.2_dev\document\figure\main_file_mins2_01.png)
-
-<div align = "center">图2.12 GC程序的主功能file_-2 (生成命令阶段)</div>
-
-程序会提示用户键入保存了分子SMILES的文件路径。用户输入文件路径（特别提醒：Windows和Linux下路径的格式略有不同！分子文件中不要有空行！）然后敲击`Enter`。之后程序要求用户输入保存被生成出的xyz文件的根目录（即本次任务所有生成的xyz文件都保存在那里），用户输入之后开始生成xyz文件。接着程序会询问用户需要使用多少个进程（核）来并行计算，当用户输入想要调用的核数并敲击`Enter`后，程序会给出提示：**请键入q以优雅地退出程序，然后在终端输入下列命令**（如图2.13所示），用户需要根据所使用的系统选择输入哪条命令，以Windows为例，在终端输入`mpiexec -np 4 python .\gp_3x_mpirun.py -smiles_file_path ./gp_3x_test_mol/SMILES.txt -out_root_path mpi_test_xyz -task xyz`（**这里的命令只是例子，根据分子文件路径和想要调用的核数不同，屏幕上输出的命令也会有所不同，请根据实际情况随机应变**），会调用本程序中的`gp_3x_mpirun.py`模块进行并行计算，然后将所有生成xyz文件生成在程序主目录的`mpi_test_xyz`目录中。在生成结束后，程序会在主目录下产生两个文件，分别是记录成功生成xyz文件的SMILES（xyz_succeed.txt）和没有成功生成xyz文件的SMILES（xyz_fail.txt）。
-
-![](C:\Users\lrc\Desktop\group_contribution_3.2_dev\document\figure\main_file_mins2_02.png)
-
-<div align = "center">图2.13 GC程序的主功能file_-2 (运行命令阶段)</div>
-
-先输入`0`返回至主界面，然后再输入`q`优雅地退出程序。在终端输入刚才程序给我们生成的命令即可。
-
-
-
-###### 2.2.1.8.4 转化给定文件的文件格式(file_3)
-
-本程序还提供了转换文件格式的功能，用户只需提供要被转化为原文件格式和路径，然后指定需要的文件格式和路径即可。**本程序此功能基于openbabel，因此但凡openbabel支持的文件格式，本功能都支持，如：xyz，mol，mol2，pdb...**
-
-使用例子见图2.14。
-
-![](C:\Users\lrc\Desktop\group_contribution_3.2_dev\document\figure\main_file_3.png)
-
-<div align = "center">图2.14 GC程序的主功能file_3 </div>
-
-注意，当指定目标文件路径时，若直接敲`Enter`，则会在程序主目录下生成与原文件同名的文件。
-
-
+<div align = "center">Figure 2.15 sub-function 3 of main function 5</div>
 
 ###### 2.2.1.8.5 批量转化给定文件的文件格式(file_4)
 

@@ -16,18 +16,24 @@ def main_function_5():
             '--------------------------------------------------------------------------------- \n'
             'You are in main function 5 \n'
             'what to do? \n'
+            'help. print all supported file formats on screen.'
             ' 0. return to main interface. \n'
             ' 1. generate a .xyz file by input SMILES of a molecule. \n'
             ' 2. generate a batch of .xyz files.                    -2. use mpi to accelerate.\n'
             ' 3. convert a file to other format (e.g. xyz, mol, mol2, pdb...) \n'
-            ' 4. convert a batch of file to other format.           -4. use mpi to accelerate.\n'
-            ' 5. generate .gjf(input file of gaussian) file by input SMILES of a molecule. \n'
-            ' 6. generate a batch of .gjf files.                    -6. use mpi to accelerate. \n'
+            ' 4. convert a batch of files to other format.          -4. use mpi to accelerate.\n'
+            ' 5. convert a file to SMILES. \n'
+            ' 6. convert a batch of files to SMILES                 -6. use mpi to accelerate.\n'
+            ' 7. generate .gjf(input file of gaussian) file by input SMILES of a molecule. \n'
+            ' 8. generate a batch of .gjf files.                    -8. use mpi to accelerate. \n'
             '--------------------------------------------------------------------------------- \n'
         )
 
+        if flag_file == 'help':
+            c = Convertor()
+            c.plot_supported_format()
 
-        if flag_file == '0':
+        elif flag_file == '0':
             break
 
         elif flag_file == '1':
@@ -56,6 +62,15 @@ def main_function_5():
 
         elif flag_file == '-6':
             sub_function_minus_6_of_main_function_5()
+
+        elif flag_file == '7':
+            sub_function_7_of_main_function_5()
+
+        elif flag_file == '8':
+            sub_function_8_of_main_function_5()
+
+        elif flag_file == '-8':
+            sub_function_minus_8_of_main_function_5()
 
     return None
 
@@ -187,7 +202,64 @@ def sub_function_minus_4_of_main_function_5():
 
 def sub_function_5_of_main_function_5():
     """
-    5. generate .gjf(input file of gaussian) file by input SMILES of a molecule.
+    5. Converting a file into SMILES.
+    """
+    file_path = input('input the path of the file which you want to convert to SMILES. \n')
+    format = input('input format of the file you want to convert. \n')
+    convertor = Convertor()
+    smi = convertor.file_to_smi(file_path=file_path, format=format)
+    print(smi)
+    print('Done!')
+    print('\n\n\n')
+    return smi
+
+
+def sub_function_6_of_main_function_5():
+    """
+    6. Converting a batch of files into SMILES.
+    """
+    in_format = input('input format of the file you want to convert. \n')
+    in_root_path = input('please input the root path of input files, that is, '
+                         'all input files you want to convert should be in there.'
+                         'e.g. test_xyz \n')
+    out_root_path = input('please input the root path of output file, that is, '
+                          'the output file will be saved in there.\n'
+                          'If press Enter directly, out_root_path will be same as in_root_path \n')
+    if not out_root_path:
+        out_root_path = None
+    convertor = Convertor()
+    smi_list = convertor.batch_file_to_smi(in_format=in_format, in_root_path=in_root_path, out_root_path=out_root_path)
+    return smi_list
+
+
+def sub_function_minus_6_of_main_function_5():
+    """
+    -6. Converting a batch of files into SMILES with MPI acceleration.
+    """
+    in_format = input('input format of the file you want to convert. \n')
+    in_root_path = input('please input the root path of input files, that is, '
+                         'all input files you want to convert should be in there.'
+                         'e.g. test_xyz \n')
+    out_root_path = input('please input the root path of output file, that is, '
+                          'the output file will be saved in there.\n'
+                          'If press Enter directly, out_root_path will be same as in_root_path \n')
+    if not out_root_path:
+        out_root_path = None
+    n_jobs = int(input('input number of cores to use. e.g. 4 \n'))
+    batch_size = input('input batch size for task decomposition. e.g. 20, you can also enter "auto" \n')
+    try:
+        batch_size = int(batch_size)
+    except:
+        pass
+    convertor = Convertor()
+    smi_list = convertor.batch_file_to_smi_mpi(in_format=in_format, in_root_path=in_root_path,
+                                               out_root_path=out_root_path,
+                                               n_jobs=n_jobs, batch_size=batch_size)
+    return smi_list
+
+def sub_function_7_of_main_function_5():
+    """
+    7. generate .gjf(input file of gaussian) file by input SMILES of a molecule.
     """
     smiles = input('input the SMILES of a molecule. \n')
     smiles = smiles.strip()
@@ -248,7 +320,10 @@ def sub_function_5_of_main_function_5():
     return None
 
 
-def sub_function_6_of_main_function_5():
+def sub_function_8_of_main_function_5():
+    """
+    8.Generating some gjf files based on a file in which saved some SMILES.
+    """
     smiles_file_path = input('input the filepath of a file in which save molecules. '
                              'e.g. ./gp_3x_test_mol/SMILES.txt \n'
                              'Hint1: Pay attention to the difference of path format in Linux and Windows! \n'
@@ -302,7 +377,10 @@ def sub_function_6_of_main_function_5():
     return None
 
 
-def sub_function_minus_6_of_main_function_5():
+def sub_function_minus_8_of_main_function_5():
+    """
+    -8. Generating some gjf files based on a file in which saved some SMILES with MPI acceleration.
+    """
     smiles_file_path = input('input the filepath of a file in which save molecules. '
                              'e.g. ./gp_3x_test_mol/SMILES.txt \n'
                              'Hint1: Pay attention to the difference of path format in Linux and Windows! \n'
