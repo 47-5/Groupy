@@ -1,2 +1,0 @@
-index,smiles,molar_mass,flash_point/K,Tm/K,Tb/K,Tc/K,Pc/bar,Vc/(cm3/mol),density/(g/cm3),delta_G/(KJ/mol),delta_Hf/(KJ/mol),delta_Hvap/(KJ/mol),delta_Hfus/(KJ/mol),molar_volume/(cm3/mol)(default298K),delta_Hc/(KJ/mol),mass_calorific_value_h/(MJ/kg),ISP,note
-0,C1CCCC1,70.13499999999998,246.185,133.463,308.65,526.651,42.659,260.02,0.731,44.883,-78.023,28.841,3.232,0.096,3108.677,44.324,340.611,C1CCCC1 at 298K
