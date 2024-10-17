@@ -1,3 +1,5 @@
+This repository corresponds to the paper *Groupy: An open-source toolkit for molecular simulation and property calculation*
+
 ### Install
 
 Download the source code:
