@@ -21,4 +21,4 @@ Install:
 Then one can enter `Groupy` in terminal to start the Groupy.
 
 ### Manual and Documention
-The user manual is in the manual folder, and the API documentation can be found in the doc folder.
+The user manual is in the manual.rar, and the API documentation can be found in the doc folder.
