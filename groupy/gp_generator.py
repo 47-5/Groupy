@@ -27,6 +27,7 @@ class Generator:
         """
         if isinstance(smi, str):
             smi = Chem.MolFromSmiles(smi)
+        smi = Chem.AddHs(smi)
         net_charge = 0
         all_charge = 0
         for i in smi.GetAtoms():
@@ -50,6 +51,7 @@ class Generator:
         if isinstance(smi, str):
             smi = Chem.MolFromSmiles(smi)
         net_charge, all_charge = self.calculate_charge(smi)
+        print(net_charge, all_charge)
         alpha_minus_beta = all_charge % 2
         multiplicity = alpha_minus_beta + 1
         return multiplicity
@@ -73,29 +75,28 @@ class Generator:
                     '#p m062x/def2tzvp scrf=solvent=water geom=check',]. Note that this parameter will only be used if add_other_tasks=True.
         :return: bool. True if the gjf file is successfully generated.
         """
+        # default path of chk and gjf
+        if chk_path is None:
+            chk_path = '{}.chk'.format(smi)
+        if gjf_path is None:
+            gjf_path = '{}.gjf'.format(smi)
+        assert ('(' not in gjf_path) and (')' not in gjf_path), \
+            'gaussian dose not allow ( or ) in the name of .gjf and .chk files'
+        assert ('(' not in chk_path) and (')' not in chk_path), \
+            'gaussian dose not allow ( or ) in the name of .gjf and .chk files'
+        # default task
+        if gaussian_keywords is None:
+            gaussian_keywords = '#p opt freq b3lyp/6-31g*'
+        # default charge and multiplicity
+        if charge_and_multiplicity is None:
+            charge_and_multiplicity = f'{self.calculate_charge(smi)[0]} {self.calculate_multiplicity(smi)}'
+        # default other tasks
+        if other_tasks is None:
+            other_tasks = [
+                '#p m062x/def2tzvp geom=check',
+                '#p m062x/def2tzvp scrf=solvent=water geom=check',
+            ]
         try:
-            # default path of chk and gjf
-            if chk_path is None:
-                chk_path = '{}.chk'.format(smi)
-            if gjf_path is None:
-                gjf_path = '{}.gjf'.format(smi)
-            assert ('(' not in gjf_path) and (')' not in gjf_path), \
-                'gaussian dose not allow ( or ) in the name of .gjf and .chk files'
-            assert ('(' not in chk_path) and (')' not in chk_path), \
-                'gaussian dose not allow ( or ) in the name of .gjf and .chk files'
-            # default task
-            if gaussian_keywords is None:
-                gaussian_keywords = '#p opt freq b3lyp/6-31g*'
-            # default charge and multiplicity
-            if charge_and_multiplicity is None:
-                charge_and_multiplicity = f'{self.calculate_charge(smi)[0]} {self.calculate_multiplicity(smi)}'
-            # default other tasks
-            if other_tasks is None:
-                other_tasks = [
-                    '#p m062x/def2tzvp geom=check',
-                    '#p m062x/def2tzvp scrf=solvent=water geom=check',
-                ]
-
             # read smi
             c = Convertor()
             temp_xyz_path = f'temp_{str(time.time()) + str(random.randint(0,1000000000000000000))}.xyz'
@@ -288,11 +289,9 @@ class Generator:
 #     import time
 #     g = Generator()
 #     t1 = time.time()
-#     # g.smi_to_gjf(smi='C1CCCC1', add_other_tasks=True)
+#     g.smi_to_gjf(smi='CC(C#N)C', add_other_tasks=False, gjf_path='1.gjf', chk_path='1.chk')
 #     # g.batch_smi_to_gjf(smiles_file_path='gp_3x_test_mol/3018_with_error_smiles.txt', gjf_root_path='./test_gjf')
-#     g.batch_smi_to_gjf_mpi(smiles_file_path='gp_3x_test_mol/3018_with_error_smiles.txt', gjf_root_path='./test_gjf',
-#                            add_other_tasks=True,
-#                            n_jobs=8, batch_size='auto')
-#
-#     t2 = time.time()
-#     print(t2 - t1)
+#     # g.batch_smi_to_gjf_mpi(smiles_file_path='gp_3x_test_mol/3018_with_error_smiles.txt', gjf_root_path='./test_gjf',
+#     #                        add_other_tasks=True,
+#     #                        n_jobs=8, batch_size='auto')
+
