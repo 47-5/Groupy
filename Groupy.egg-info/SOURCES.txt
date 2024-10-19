@@ -1,5 +1,7 @@
 README.md
 setup.py
+./groupy/group_contribution_parameters.xlsx
+./groupy/group_order.xlsx
 Groupy.egg-info/PKG-INFO
 Groupy.egg-info/SOURCES.txt
 Groupy.egg-info/dependency_links.txt
