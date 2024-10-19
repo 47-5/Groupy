@@ -27,7 +27,7 @@ class Generator:
         """
         if isinstance(smi, str):
             smi = Chem.MolFromSmiles(smi)
-        smi = Chem.AddHs(smi)
+        smi = Chem.AddHs(smi)  # add H
         net_charge = 0
         all_charge = 0
         for i in smi.GetAtoms():
