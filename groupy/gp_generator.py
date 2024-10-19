@@ -51,7 +51,6 @@ class Generator:
         if isinstance(smi, str):
             smi = Chem.MolFromSmiles(smi)
         net_charge, all_charge = self.calculate_charge(smi)
-        print(net_charge, all_charge)
         alpha_minus_beta = all_charge % 2
         multiplicity = alpha_minus_beta + 1
         return multiplicity
