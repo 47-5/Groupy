@@ -22,3 +22,7 @@ Then one can enter `Groupy` in terminal to start the Groupy.
 
 ### Manual and Documention
 The user manual is in the manual folder, and the API documentation can be found in the doc folder.
+
+
+# Sorry!
+Sorry, we found a bug, using batch mode to calculate the properties of a batch of molecules results in errors, but the calculation of a single molecule is normal, we recommend users do not use batch mode. We are actively working on this bug
