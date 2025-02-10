@@ -1,4 +1,4 @@
-Metadata-Version: 2.1
+Metadata-Version: 2.2
 Name: Groupy
 Version: 3.0.0
 Summary: Groupy -- A Useful Tool for Molecular Analysis
@@ -13,3 +13,9 @@ Requires-Dist: tqdm
 Requires-Dist: ase
 Requires-Dist: joblib
 Requires-Dist: openpyxl
+Dynamic: author
+Dynamic: author-email
+Dynamic: home-page
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary

@@ -427,7 +427,7 @@ class Calculator:
                     'ISP': '?',
                     'note': 'There must be something wrong with this SMILES'}
 
-    def calculate_mols(self, smiles_file_path, properties_file_path='gp_3x_result.csv', check_hydrocarbon=True, parameter_type='simultaneous'):
+    def calculate_mols(self, smiles_file_path, properties_file_path='gp_3x_result.csv', check_hydrocarbon=True, parameter_type='step_wise'):
         """
         Calculating properties of a batch of molecules.
         :param smiles_file_path: path of the file(.txt, .xlsx, .csv) in which saved SMILES.
@@ -467,7 +467,7 @@ class Calculator:
         print('Done!')
         return result
 
-    def calculate_mols_mpi(self, smiles_file_path, properties_file_path='gp_3x_result_mpi.csv', check_hydrocarbon=True, parameter_type='simultaneous', n_jobs=1, batch_size='auto'):
+    def calculate_mols_mpi(self, smiles_file_path, properties_file_path='gp_3x_result_mpi.csv', check_hydrocarbon=True, parameter_type='step_wise', n_jobs=1, batch_size='auto'):
         """
         Calculating properties of a batch of molecules with MPI acceleration.
         :param smiles_file_path: path of the file(.txt, .xlsx, .csv) in which saved SMILES.
