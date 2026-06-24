@@ -137,8 +137,17 @@ Current file handling status:
 
 - [ ] Cache `Loader` results so Excel files are not repeatedly parsed.
 - [ ] Keep SMARTS/group-counting logic behaviorally unchanged until tests cover it better.
-- [ ] Rename or alias `*_mpi` APIs to `*_parallel`, since they use `joblib`, not MPI.
-- [ ] Preserve old method names during transition for backward compatibility.
+- [x] Rename or alias `*_mpi` APIs to `*_parallel`, since they use `joblib`, not MPI.
+- [x] Preserve old method names during transition for backward compatibility.
+
+Current parallel API status:
+
+- `Calculator.calculate_mols_parallel()` calls `calculate_mols_mpi()`.
+- `Counter.count_mols_parallel()` calls `count_mols_mpi()`.
+- `Convertor.batch_smi_to_xyz_parallel()` calls `batch_smi_to_xyz_mpi()`.
+- `Convertor.batch_convert_file_type_parallel()` calls `batch_convert_file_type_mpi()`.
+- `Convertor.batch_file_to_smi_parallel()` calls `batch_file_to_smi_mpi()`.
+- `Generator.batch_smi_to_gjf_parallel()` calls `batch_smi_to_gjf_mpi()`.
 
 ## Phase 8: Documentation And CI
 

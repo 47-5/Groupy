@@ -3314,6 +3314,15 @@ class Counter:
         print('Done!')
         return result
 
+    def count_mols_parallel(self, *args, **kwargs):
+        """
+        Counting number of different groups of a batch of molecules with joblib parallelism.
+
+        This is the preferred name for new code. It calls count_mols_mpi()
+        for backward compatibility with the original API.
+        """
+        return self.count_mols_mpi(*args, **kwargs)
+
     def get_group_fingerprint(self, mol):
         """
         Getting group style fingerprint of a molecule. In fact, this method just call Counter.count_a_mol() and convert its result to a list.

@@ -148,6 +148,15 @@ class Convertor:
         print('done! all .xyz files has been saved in {}'.format(xyz_root_path))
         return result
 
+    def batch_smi_to_xyz_parallel(self, *args, **kwargs):
+        """
+        Converting a batch of SMILES to xyz files with joblib parallelism.
+
+        This is the preferred name for new code. It calls batch_smi_to_xyz_mpi()
+        for backward compatibility with the original API.
+        """
+        return self.batch_smi_to_xyz_mpi(*args, **kwargs)
+
     @staticmethod
     def convert_file_type(in_format, in_path, out_format, out_path=None):
         """
@@ -246,6 +255,15 @@ class Convertor:
         result = Parallel(n_jobs=n_jobs, batch_size=batch_size)(task)
         return result
 
+    def batch_convert_file_type_parallel(self, *args, **kwargs):
+        """
+        Converting format of a batch of files with joblib parallelism.
+
+        This is the preferred name for new code. It calls batch_convert_file_type_mpi()
+        for backward compatibility with the original API.
+        """
+        return self.batch_convert_file_type_mpi(*args, **kwargs)
+
     @staticmethod
     def file_to_smi(file_path, format=None):
         """
@@ -336,6 +354,15 @@ class Convertor:
             for i in smi_list:
                 f.write(i + '\n')
         return smi_list
+
+    def batch_file_to_smi_parallel(self, *args, **kwargs):
+        """
+        Converting a batch of files into SMILES with joblib parallelism.
+
+        This is the preferred name for new code. It calls batch_file_to_smi_mpi()
+        for backward compatibility with the original API.
+        """
+        return self.batch_file_to_smi_mpi(*args, **kwargs)
 
     def plot_supported_format(self):
         """

@@ -495,6 +495,15 @@ class Calculator:
         print('Done!')
         return result
 
+    def calculate_mols_parallel(self, *args, **kwargs):
+        """
+        Calculating properties of a batch of molecules with joblib parallelism.
+
+        This is the preferred name for new code. It calls calculate_mols_mpi()
+        for backward compatibility with the original API.
+        """
+        return self.calculate_mols_mpi(*args, **kwargs)
+
 
 # if __name__ == '__main__':
 #     import time

@@ -238,6 +238,15 @@ class Generator:
         result = Parallel(n_jobs=n_jobs, batch_size=batch_size)(task)
         return result
 
+    def batch_smi_to_gjf_parallel(self, *args, **kwargs):
+        """
+        Generating Gaussian job files with joblib parallelism.
+
+        This is the preferred name for new code. It calls batch_smi_to_gjf_mpi()
+        for backward compatibility with the original API.
+        """
+        return self.batch_smi_to_gjf_mpi(*args, **kwargs)
+
     @staticmethod
     def write_gjf_link0_and_keyword(gjf_path, chk_path, nproc, mem, gaussian_keywords, charge_and_multiplicity, note,
                                     old_chk_path=None, add_link1=False):

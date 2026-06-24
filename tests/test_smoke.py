@@ -106,6 +106,31 @@ class CoreChemistrySmokeTests(unittest.TestCase):
             self.assertEqual(error_path.read_text(encoding="utf-8"), "C1CCCC1\n")
             self.assertTrue(output_path.exists())
 
+    def test_parallel_aliases_for_counter_and_calculator(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            input_path = tmp_path / "smiles.txt"
+            count_output = tmp_path / "count_parallel.csv"
+            calculate_output = tmp_path / "calculate_parallel.csv"
+            input_path.write_text("C1CCCC1\n", encoding="utf-8")
+
+            count_result = Counter().count_mols_parallel(
+                str(input_path),
+                count_result_file_path=str(count_output),
+                add_smiles=True,
+                n_jobs=1,
+            )
+            calculate_result = Calculator().calculate_mols_parallel(
+                str(input_path),
+                properties_file_path=str(calculate_output),
+                n_jobs=1,
+            )
+
+            self.assertEqual(count_result.loc[0, "smiles"], "C1CCCC1")
+            self.assertEqual(count_result.loc[0, "f_168"], 5)
+            self.assertEqual(calculate_result.loc[0, "smiles"], "C1CCCC1")
+            self.assertAlmostEqual(calculate_result.loc[0, "molar_mass"], 70.135)
+
 
 class SmilesFileSmokeTests(unittest.TestCase):
     def test_load_smiles_iterator_from_txt_csv_and_xlsx(self):
@@ -191,6 +216,43 @@ class ConvertorSmokeTests(unittest.TestCase):
             self.assertEqual(fail_path.read_text(encoding="utf-8"), "invalid\n")
             self.assertEqual(succeed_path.read_text(encoding="utf-8"), "C1CCCC1\n")
 
+    @unittest.skipUnless(importlib.util.find_spec("openbabel"), "OpenBabel is required by gp_convertor")
+    def test_convertor_parallel_aliases_call_legacy_methods(self):
+        from groupy.gp_convertor import Convertor
+
+        convertor = Convertor()
+        calls = []
+
+        def fake_batch_smi_to_xyz_mpi(*args, **kwargs):
+            calls.append(("xyz", args, kwargs))
+            return [True]
+
+        def fake_batch_convert_file_type_mpi(*args, **kwargs):
+            calls.append(("convert", args, kwargs))
+            return ["converted"]
+
+        def fake_batch_file_to_smi_mpi(*args, **kwargs):
+            calls.append(("smi", args, kwargs))
+            return ["C1CCCC1"]
+
+        convertor.batch_smi_to_xyz_mpi = fake_batch_smi_to_xyz_mpi
+        convertor.batch_convert_file_type_mpi = fake_batch_convert_file_type_mpi
+        convertor.batch_file_to_smi_mpi = fake_batch_file_to_smi_mpi
+
+        self.assertEqual(
+            convertor.batch_smi_to_xyz_parallel("smiles.txt", "xyz", n_jobs=1),
+            [True],
+        )
+        self.assertEqual(
+            convertor.batch_convert_file_type_parallel("xyz", "in", "mol2", n_jobs=1),
+            ["converted"],
+        )
+        self.assertEqual(
+            convertor.batch_file_to_smi_parallel("xyz", "in", n_jobs=1),
+            ["C1CCCC1"],
+        )
+        self.assertEqual([call[0] for call in calls], ["xyz", "convert", "smi"])
+
 
 class GeneratorSmokeTests(unittest.TestCase):
     @unittest.skipUnless(importlib.util.find_spec("openbabel"), "OpenBabel is required by gp_generator")
@@ -253,6 +315,26 @@ class GeneratorSmokeTests(unittest.TestCase):
 
             self.assertEqual(fail_path.read_text(encoding="utf-8"), "invalid\n")
             self.assertEqual(succeed_path.read_text(encoding="utf-8"), "C1CCCC1\n")
+
+    @unittest.skipUnless(importlib.util.find_spec("openbabel"), "OpenBabel is required by gp_generator")
+    def test_generator_parallel_alias_calls_legacy_method(self):
+        from groupy.gp_generator import Generator
+
+        generator = Generator()
+        calls = []
+
+        def fake_batch_smi_to_gjf_mpi(*args, **kwargs):
+            calls.append((args, kwargs))
+            return [True]
+
+        generator.batch_smi_to_gjf_mpi = fake_batch_smi_to_gjf_mpi
+
+        self.assertEqual(
+            generator.batch_smi_to_gjf_parallel("smiles.txt", "gjf", n_jobs=1),
+            [True],
+        )
+        self.assertEqual(calls[0][0], ("smiles.txt", "gjf"))
+        self.assertEqual(calls[0][1], {"n_jobs": 1})
 
 
 class CliSmokeTests(unittest.TestCase):
