@@ -773,6 +773,16 @@ class GuiSmokeTests(unittest.TestCase):
             self.assertIn("python -m pip install -e", completed.stderr)
             self.assertIn(".[gui]", completed.stderr)
 
+    def test_gui_record_helpers_use_public_api(self):
+        from groupy.gui.app import calculate_records, count_records
+
+        calculation = calculate_records(["C1CCCC1"])
+        counts = count_records(["C1CCCC1"])
+
+        self.assertEqual(calculation[0]["smiles"], "C1CCCC1")
+        self.assertAlmostEqual(calculation[0]["molar_mass"], 70.135)
+        self.assertEqual(counts[0], {"f_168": 5, "smiles": "C1CCCC1"})
+
 
 class CliSmokeTests(unittest.TestCase):
     def test_cli_import_does_not_load_openbabel_conversion_stack(self):

@@ -223,7 +223,7 @@ Current parallel API status:
   - [x] group counting
   - [x] CSV export
 - [x] Visually smoke-test the initial GUI runtime.
-- [ ] Add background worker handling so long calculations do not freeze the UI.
+- [x] Add background worker handling so long calculations do not freeze the UI.
 - [x] Add GUI smoke tests where practical.
 - [ ] Add packaging script for Windows executable builds.
 - [ ] Test the packaged app on a clean Windows environment.
@@ -235,6 +235,8 @@ Current GUI status:
 - `python -m groupy.gui --check` and `Groupy-GUI --check` report a clear install hint when PySide6 is missing.
 - `groupy.gui` imports without importing PySide6, so core CLI/API usage remains lightweight.
 - The user confirmed the first GUI can run normally in a GUI-capable environment.
+- Property calculation and group counting now run in a `QThread` worker instead of the GUI thread.
+- Worker-based GUI behavior still needs visual confirmation in a PySide6 environment.
 
 ## Current Known Review Findings
 
@@ -249,6 +251,6 @@ Current GUI status:
 
 Continue with Phase 9:
 
-1. Add background worker handling so long calculations do not freeze the UI.
+1. Visually confirm worker-based calculation/counting in a PySide6 environment.
 2. Add a Windows packaging script for a double-clickable executable build.
 3. Test the packaged app on a clean Windows environment.

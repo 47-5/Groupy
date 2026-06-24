@@ -22,6 +22,16 @@ def is_pyside6_available() -> bool:
     return importlib.util.find_spec("PySide6") is not None
 
 
+def calculate_records(smiles_values: list[str]) -> list[dict[str, Any]]:
+    """Calculate properties for a list of SMILES strings."""
+    return [calculate_smiles(smiles) for smiles in smiles_values]
+
+
+def count_records(smiles_values: list[str]) -> list[dict[str, Any]]:
+    """Count groups for a list of SMILES strings."""
+    return [count_smiles(smiles) for smiles in smiles_values]
+
+
 def main(argv: list[str] | None = None) -> int:
     """Run the desktop GUI."""
     parser = argparse.ArgumentParser(prog="Groupy-GUI", description="Launch the Groupy desktop GUI.")
@@ -49,10 +59,31 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _create_main_window(QtCore: Any, QtWidgets: Any):
+    class BatchWorker(QtCore.QObject):
+        finished = QtCore.Signal(object, str)
+        failed = QtCore.Signal(str)
+
+        def __init__(self, smiles_values, operation, message):
+            super().__init__()
+            self._smiles_values = smiles_values
+            self._operation = operation
+            self._message = message
+
+        @QtCore.Slot()
+        def run(self):
+            try:
+                records = self._operation(self._smiles_values)
+            except Exception as exc:
+                self.failed.emit(str(exc))
+                return
+            self.finished.emit(records, self._message)
+
     class GroupyMainWindow(QtWidgets.QMainWindow):
         def __init__(self):
             super().__init__()
             self._records: list[dict[str, Any]] = []
+            self._worker = None
+            self._worker_thread = None
             self.setWindowTitle("Groupy")
             self.resize(980, 680)
 
@@ -105,20 +136,61 @@ def _create_main_window(QtCore: Any, QtWidgets: Any):
             return values
 
         def _calculate_properties(self) -> None:
-            try:
-                records = [calculate_smiles(smiles) for smiles in self._smiles_values()]
-            except Exception as exc:
-                self._show_error(str(exc))
-                return
-            self._show_records(records, "Calculated properties")
+            self._start_worker(calculate_records, "Calculated properties", "Calculating properties...")
 
         def _count_groups(self) -> None:
+            self._start_worker(count_records, "Counted groups", "Counting groups...")
+
+        def _start_worker(self, operation, done_message: str, progress_message: str) -> None:
+            if self._worker_thread is not None:
+                return
             try:
-                records = [count_smiles(smiles) for smiles in self._smiles_values()]
+                smiles_values = self._smiles_values()
             except Exception as exc:
                 self._show_error(str(exc))
                 return
-            self._show_records(records, "Counted groups")
+
+            self._set_busy(True, progress_message)
+            thread = QtCore.QThread(self)
+            worker = BatchWorker(smiles_values, operation, done_message)
+            worker.moveToThread(thread)
+
+            thread.started.connect(worker.run)
+            worker.finished.connect(self._finish_worker)
+            worker.failed.connect(self._fail_worker)
+            worker.finished.connect(worker.deleteLater)
+            worker.failed.connect(worker.deleteLater)
+            worker.finished.connect(thread.quit)
+            worker.failed.connect(thread.quit)
+            thread.finished.connect(thread.deleteLater)
+            thread.finished.connect(self._clear_worker)
+
+            self._worker = worker
+            self._worker_thread = thread
+            thread.start()
+
+        def _finish_worker(self, records: list[dict[str, Any]], message: str) -> None:
+            self._set_busy(False)
+            self._show_records(records, message)
+
+        def _fail_worker(self, message: str) -> None:
+            self._set_busy(False)
+            self._show_error(message)
+
+        def _clear_worker(self) -> None:
+            self._worker = None
+            self._worker_thread = None
+
+        def _set_busy(self, busy: bool, message: str | None = None) -> None:
+            self.calculate_button.setEnabled(not busy)
+            self.count_button.setEnabled(not busy)
+            self.smiles_input.setEnabled(not busy)
+            self.export_button.setEnabled((not busy) and bool(self._records))
+            if busy:
+                QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+                self.statusBar().showMessage(message or "Working...")
+            else:
+                QtWidgets.QApplication.restoreOverrideCursor()
 
         def _show_records(self, records: list[dict[str, Any]], message: str) -> None:
             self._records = records
