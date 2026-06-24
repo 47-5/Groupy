@@ -101,7 +101,7 @@ Current CLI behavior:
 - [x] Use explicit encodings for text SMILES files.
 - [ ] Avoid writing implicit side-effect files such as `error.txt`, `xyz_fail.txt`, and `gjf_fail.txt` to the current working directory unless requested.
   - [x] `Calculator.calculate_mols()` no longer writes `error.txt` unless `error_file_path` is provided.
-  - [ ] `Convertor` failure logs such as `xyz_fail.txt` and `xyz_succeed.txt`.
+  - [x] `Convertor.batch_smi_to_xyz()` no longer writes `xyz_fail.txt` or `xyz_succeed.txt` unless explicit paths are provided.
   - [ ] `Generator` failure logs such as `gjf_fail.txt` and `gjf_succeed.txt`.
 - [ ] Make batch output paths predictable and configurable.
 
@@ -110,7 +110,8 @@ Current file handling status:
 - `groupy.io.load_smiles_file()` is the shared loader for `.txt`, `.csv`, and `.xlsx` SMILES inputs.
 - `groupy.api`, `groupy.gp_tool.Tool`, `Calculator.calculate_mols*`, and `Counter.count_mols*` use the shared loader.
 - `Calculator.calculate_mols()` now supports an explicit `error_file_path` for failed SMILES output.
-- Remaining side-effect files such as `xyz_fail.txt`, `xyz_succeed.txt`, `gjf_fail.txt`, and `gjf_succeed.txt` still need cleanup in later steps.
+- `Convertor.batch_smi_to_xyz()` now supports explicit `fail_file_path` and `succeed_file_path` outputs.
+- Remaining side-effect files such as `gjf_fail.txt` and `gjf_succeed.txt` still need cleanup in later steps.
 
 ## Phase 5: Exceptions, Logging, And Error Reporting
 

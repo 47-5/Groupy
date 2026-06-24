@@ -129,6 +129,69 @@ class SmilesFileSmokeTests(unittest.TestCase):
             self.assertEqual(load_smiles_file(xlsx_path), expected)
 
 
+class ConvertorSmokeTests(unittest.TestCase):
+    @unittest.skipUnless(importlib.util.find_spec("openbabel"), "OpenBabel is required by gp_convertor")
+    def test_batch_smi_to_xyz_does_not_write_logs_by_default(self):
+        from groupy.gp_convertor import Convertor
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            input_path = tmp_path / "smiles.txt"
+            xyz_root = tmp_path / "xyz"
+            input_path.write_text("C1CCCC1\ninvalid\n", encoding="utf-8")
+
+            convertor = Convertor()
+
+            def fake_smi_to_xyz(smi, xyz_path=None):
+                if smi == "invalid":
+                    return False
+                Path(xyz_path).write_text("fake xyz\n", encoding="utf-8")
+                return True
+
+            convertor.smi_to_xyz = fake_smi_to_xyz
+
+            original_cwd = Path.cwd()
+            os.chdir(tmp_path)
+            try:
+                convertor.batch_smi_to_xyz(str(input_path), str(xyz_root))
+            finally:
+                os.chdir(original_cwd)
+
+            self.assertFalse((tmp_path / "xyz_fail.txt").exists())
+            self.assertFalse((tmp_path / "xyz_succeed.txt").exists())
+
+    @unittest.skipUnless(importlib.util.find_spec("openbabel"), "OpenBabel is required by gp_convertor")
+    def test_batch_smi_to_xyz_writes_logs_when_requested(self):
+        from groupy.gp_convertor import Convertor
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            input_path = tmp_path / "smiles.txt"
+            xyz_root = tmp_path / "xyz"
+            fail_path = tmp_path / "logs" / "xyz_fail.txt"
+            succeed_path = tmp_path / "logs" / "xyz_succeed.txt"
+            input_path.write_text("C1CCCC1\ninvalid\n", encoding="utf-8")
+
+            convertor = Convertor()
+
+            def fake_smi_to_xyz(smi, xyz_path=None):
+                if smi == "invalid":
+                    return False
+                Path(xyz_path).write_text("fake xyz\n", encoding="utf-8")
+                return True
+
+            convertor.smi_to_xyz = fake_smi_to_xyz
+            convertor.batch_smi_to_xyz(
+                str(input_path),
+                str(xyz_root),
+                fail_file_path=str(fail_path),
+                succeed_file_path=str(succeed_path),
+            )
+
+            self.assertEqual(fail_path.read_text(encoding="utf-8"), "invalid\n")
+            self.assertEqual(succeed_path.read_text(encoding="utf-8"), "C1CCCC1\n")
+
+
 class CliSmokeTests(unittest.TestCase):
     def test_cli_import_does_not_load_openbabel_conversion_stack(self):
         command = [

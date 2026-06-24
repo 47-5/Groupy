@@ -8,6 +8,7 @@ from joblib import Parallel, delayed
 from pprint import pprint
 
 from groupy.gp_tool import Tool
+from groupy.io import write_text_lines
 
 
 class Convertor:
@@ -76,11 +77,13 @@ class Convertor:
                         file.write(i.split()[2] + '\n')
         return True
 
-    def batch_smi_to_xyz(self, smiles_file_path, xyz_root_path):
+    def batch_smi_to_xyz(self, smiles_file_path, xyz_root_path, fail_file_path=None, succeed_file_path=None):
         """
         Converting a batch of SMILES to xyz files.
         :param smiles_file_path: str. Path of the file in which saved SMILES.
         :param xyz_root_path: str. The folder path where all generated xyz files are saved.
+        :param fail_file_path: optional path for writing SMILES strings that failed to generate xyz files.
+        :param succeed_file_path: optional path for writing SMILES strings that successfully generated xyz files.
         :return: None.
         """
         smiles_iterator = Tool.load_smiles_iterator(smiles_file_path=smiles_file_path)
@@ -107,12 +110,10 @@ class Convertor:
             else:
                 succeed.append(smi)
 
-        with open('xyz_fail.txt', 'w') as f:
-            for i in fail:
-                f.write(i + '\n')
-        with open('xyz_succeed.txt', 'w') as f:
-            for i in succeed:
-                f.write(i + '\n')
+        if fail_file_path is not None:
+            write_text_lines(fail, fail_file_path)
+        if succeed_file_path is not None:
+            write_text_lines(succeed, succeed_file_path)
 
         if len(fail) == 0:
             print('done! all .xyz files has been saved in {}'.format(xyz_root_path))
