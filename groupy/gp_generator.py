@@ -7,6 +7,7 @@ import random
 
 from groupy.gp_convertor import Convertor
 from groupy.gp_tool import Tool
+from groupy.io import write_text_lines
 
 
 class Generator:
@@ -130,6 +131,7 @@ class Generator:
                          gaussian_keywords=None, charge_and_multiplicity=None,
                          add_other_tasks=False, other_tasks: list = None,
                          index_start=0,
+                         fail_file_path=None, succeed_file_path=None,
                          ):
         """
         Generating some gjf files based on a file in which saved some SMILES.
@@ -144,6 +146,8 @@ class Generator:
         :param add_other_tasks: bool. Whether to add other job into you gjf file. Default=False
         :param other_tasks: list. Jobs you want to add into you gjf file. Default = ['#p m062x/def2tzvp geom=check',
                     '#p m062x/def2tzvp scrf=solvent=water geom=check',]. Note that this parameter will only be used if add_other_tasks=True.
+        :param fail_file_path: optional path for writing SMILES strings that failed to generate gjf files.
+        :param succeed_file_path: optional path for writing SMILES strings that successfully generated gjf files.
         :return: None
         """
         smiles_iterator = Tool.load_smiles_iterator(smiles_file_path=smiles_file_path)
@@ -177,12 +181,10 @@ class Generator:
             else:
                 succeed.append(smi)
 
-        with open('gjf_fail.txt', 'w') as f:
-            for i in fail:
-                f.write(i + '\n')
-        with open('gjf_succeed.txt', 'w') as f:
-            for i in succeed:
-                f.write(i + '\n')
+        if fail_file_path is not None:
+            write_text_lines(fail, fail_file_path)
+        if succeed_file_path is not None:
+            write_text_lines(succeed, succeed_file_path)
         if len(fail) == 0:
             print('done! all .gjf files has been saved in {}'.format(gjf_root_path))
         else:
@@ -293,4 +295,3 @@ class Generator:
 #     # g.batch_smi_to_gjf_mpi(smiles_file_path='gp_3x_test_mol/3018_with_error_smiles.txt', gjf_root_path='./test_gjf',
 #     #                        add_other_tasks=True,
 #     #                        n_jobs=8, batch_size='auto')
-

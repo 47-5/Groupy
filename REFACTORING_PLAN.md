@@ -102,7 +102,7 @@ Current CLI behavior:
 - [ ] Avoid writing implicit side-effect files such as `error.txt`, `xyz_fail.txt`, and `gjf_fail.txt` to the current working directory unless requested.
   - [x] `Calculator.calculate_mols()` no longer writes `error.txt` unless `error_file_path` is provided.
   - [x] `Convertor.batch_smi_to_xyz()` no longer writes `xyz_fail.txt` or `xyz_succeed.txt` unless explicit paths are provided.
-  - [ ] `Generator` failure logs such as `gjf_fail.txt` and `gjf_succeed.txt`.
+  - [x] `Generator.batch_smi_to_gjf()` no longer writes `gjf_fail.txt` or `gjf_succeed.txt` unless explicit paths are provided.
 - [ ] Make batch output paths predictable and configurable.
 
 Current file handling status:
@@ -111,7 +111,7 @@ Current file handling status:
 - `groupy.api`, `groupy.gp_tool.Tool`, `Calculator.calculate_mols*`, and `Counter.count_mols*` use the shared loader.
 - `Calculator.calculate_mols()` now supports an explicit `error_file_path` for failed SMILES output.
 - `Convertor.batch_smi_to_xyz()` now supports explicit `fail_file_path` and `succeed_file_path` outputs.
-- Remaining side-effect files such as `gjf_fail.txt` and `gjf_succeed.txt` still need cleanup in later steps.
+- `Generator.batch_smi_to_gjf()` now supports explicit `fail_file_path` and `succeed_file_path` outputs.
 
 ## Phase 5: Exceptions, Logging, And Error Reporting
 

@@ -192,6 +192,69 @@ class ConvertorSmokeTests(unittest.TestCase):
             self.assertEqual(succeed_path.read_text(encoding="utf-8"), "C1CCCC1\n")
 
 
+class GeneratorSmokeTests(unittest.TestCase):
+    @unittest.skipUnless(importlib.util.find_spec("openbabel"), "OpenBabel is required by gp_generator")
+    def test_batch_smi_to_gjf_does_not_write_logs_by_default(self):
+        from groupy.gp_generator import Generator
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            input_path = tmp_path / "smiles.txt"
+            gjf_root = tmp_path / "gjf"
+            input_path.write_text("C1CCCC1\ninvalid\n", encoding="utf-8")
+
+            generator = Generator()
+
+            def fake_smi_to_gjf(smi, **kwargs):
+                if smi == "invalid":
+                    return False
+                Path(kwargs["gjf_path"]).write_text("fake gjf\n", encoding="utf-8")
+                return True
+
+            generator.smi_to_gjf = fake_smi_to_gjf
+
+            original_cwd = Path.cwd()
+            os.chdir(tmp_path)
+            try:
+                generator.batch_smi_to_gjf(str(input_path), str(gjf_root))
+            finally:
+                os.chdir(original_cwd)
+
+            self.assertFalse((tmp_path / "gjf_fail.txt").exists())
+            self.assertFalse((tmp_path / "gjf_succeed.txt").exists())
+
+    @unittest.skipUnless(importlib.util.find_spec("openbabel"), "OpenBabel is required by gp_generator")
+    def test_batch_smi_to_gjf_writes_logs_when_requested(self):
+        from groupy.gp_generator import Generator
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            input_path = tmp_path / "smiles.txt"
+            gjf_root = tmp_path / "gjf"
+            fail_path = tmp_path / "logs" / "gjf_fail.txt"
+            succeed_path = tmp_path / "logs" / "gjf_succeed.txt"
+            input_path.write_text("C1CCCC1\ninvalid\n", encoding="utf-8")
+
+            generator = Generator()
+
+            def fake_smi_to_gjf(smi, **kwargs):
+                if smi == "invalid":
+                    return False
+                Path(kwargs["gjf_path"]).write_text("fake gjf\n", encoding="utf-8")
+                return True
+
+            generator.smi_to_gjf = fake_smi_to_gjf
+            generator.batch_smi_to_gjf(
+                str(input_path),
+                str(gjf_root),
+                fail_file_path=str(fail_path),
+                succeed_file_path=str(succeed_path),
+            )
+
+            self.assertEqual(fail_path.read_text(encoding="utf-8"), "invalid\n")
+            self.assertEqual(succeed_path.read_text(encoding="utf-8"), "C1CCCC1\n")
+
+
 class CliSmokeTests(unittest.TestCase):
     def test_cli_import_does_not_load_openbabel_conversion_stack(self):
         command = [
