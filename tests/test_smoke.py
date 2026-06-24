@@ -1,11 +1,13 @@
 import importlib.util
 import builtins
+import io
 import json
 import os
 import subprocess
 import sys
 import tempfile
 import unittest
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 
 import pandas as pd
@@ -154,6 +156,28 @@ class CoreChemistrySmokeTests(unittest.TestCase):
             self.assertEqual(result.loc[0, "f_168"], 5)
             self.assertTrue(output_path.exists())
 
+    def test_counter_batch_can_run_quietly_for_gui_use(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            input_path = tmp_path / "smiles.txt"
+            output_path = tmp_path / "count.csv"
+            input_path.write_text("C1CCCC1\n", encoding="utf-8")
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+
+            with redirect_stdout(stdout), redirect_stderr(stderr):
+                result = Counter().count_mols(
+                    str(input_path),
+                    count_result_file_path=str(output_path),
+                    add_smiles=True,
+                    verbose=False,
+                )
+
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertEqual(stderr.getvalue(), "")
+            self.assertEqual(result.loc[0, "smiles"], "C1CCCC1")
+            self.assertTrue(output_path.exists())
+
     def test_calculator_batch_uses_shared_smiles_loader(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp_path = Path(tmpdir)
@@ -175,6 +199,28 @@ class CoreChemistrySmokeTests(unittest.TestCase):
             self.assertAlmostEqual(result.loc[0, "molar_mass"], 70.135)
             self.assertTrue(output_path.exists())
             self.assertFalse((tmp_path / "error.txt").exists())
+
+    def test_calculator_batch_can_run_quietly_for_gui_use(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            input_path = tmp_path / "smiles.txt"
+            output_path = tmp_path / "calculate.csv"
+            input_path.write_text("C1CCCC1\n", encoding="utf-8")
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+
+            with redirect_stdout(stdout), redirect_stderr(stderr):
+                result = Calculator().calculate_mols(
+                    str(input_path),
+                    properties_file_path=str(output_path),
+                    verbose=False,
+                )
+
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertEqual(stderr.getvalue(), "")
+            self.assertEqual(result.loc[0, "smiles"], "C1CCCC1")
+            self.assertAlmostEqual(result.loc[0, "molar_mass"], 70.135)
+            self.assertTrue(output_path.exists())
 
     def test_calculator_batch_writes_error_file_only_when_requested(self):
         with tempfile.TemporaryDirectory() as tmpdir:

@@ -15,6 +15,12 @@ __all__ = ["Counter", ]
 logger = logging.getLogger(__name__)
 
 
+def _report_progress(message, verbose):
+    logger.info(message)
+    if verbose:
+        print(message)
+
+
 # tool
 def has_non_aromatic_neighbor(atom):
     """判断原子周围是否有非芳香原子"""
@@ -3261,16 +3267,18 @@ class Counter:
             logger.warning("Failed to count groups for %r: %s", init_smi, exc)
             return self.init_result.copy()
 
-    def count_mols(self, smiles_file_path, count_result_file_path='count_result.csv', add_note=False, add_smiles=False):
+    def count_mols(self, smiles_file_path, count_result_file_path='count_result.csv',
+                   add_note=False, add_smiles=False, verbose=True):
         """
         Counting number of different groups of a batch of molecules.
         :param smiles_file_path: str. Path of the file(.txt, .xlsx, .csv) in which saved SMILES of molecules.
         :param count_result_file_path: str. path of result file. Default='count_result.csv'.
         :param add_note: bool. If set to True, a note(SMILES of current molecule) will be added to the dictionary that stores the results, i.e. {note: SMILES}. Default=False.
         :param add_smiles: bool. If set to True, The SMILES of current molecule will be added to the dictionary that stores the results, i.e. {smiles: SMILES}. Default=False.
+        :param verbose: if True, print progress messages and progress bars. Set False for programmatic or GUI use.
         :return: pandas Dataframe. A dictionary that stores the results.
         """
-        print('reading the input file...')
+        _report_progress('reading the input file...', verbose)
         try:
             smiles_iterator = load_smiles_file(smiles_file_path)
         except ValueError as exc:
@@ -3278,18 +3286,19 @@ class Counter:
                 'ERROR: The file type cannot be read, use the.txt/.xlsx/.csv file as the input file.') from exc
 
         mol_number = len(smiles_iterator)
-        print('Done, totally detected {} molecules, start counting...'.format(mol_number))
+        _report_progress('Done, totally detected {} molecules, start counting...'.format(mol_number), verbose)
         count_result_dict_list = []
-        for i in tqdm(smiles_iterator):
+        for i in tqdm(smiles_iterator, disable=not verbose):
             count_result_dict_list.append(self.count_a_mol(i, add_note=add_note, add_smiles=add_smiles))
-        print('Done!')
-        print('writing to csv...')
+        _report_progress('Done!', verbose)
+        _report_progress('writing to csv...', verbose)
         result = pd.DataFrame(count_result_dict_list)
         result.to_csv(count_result_file_path, index_label='index')
-        print('Done!')
+        _report_progress('Done!', verbose)
         return result
 
-    def count_mols_mpi(self, smiles_file_path, count_result_file_path='count_result.csv', add_note=False, add_smiles=False, n_jobs=1, batch_size='auto'):
+    def count_mols_mpi(self, smiles_file_path, count_result_file_path='count_result.csv',
+                       add_note=False, add_smiles=False, n_jobs=1, batch_size='auto', verbose=True):
         """
         Counting number of different groups of a batch of molecules with MPI acceleration.
         :param smiles_file_path: str. Path of the file(.txt, .xlsx, .csv) in which saved SMILES of molecules.
@@ -3298,9 +3307,10 @@ class Counter:
         :param add_smiles: bool. If set to True, The SMILES of current molecule will be added to the dictionary that stores the results, i.e. {smiles: SMILES}. Default=False.
         :param n_jobs: int. number of CPU cores you want to use when counting groups.
         :param batch_size: int or str. Number of tasks per CPU core you want to use when counting groups. Default='auto'.
+        :param verbose: if True, print progress messages. Set False for programmatic or GUI use.
         :return: pandas Dataframe. A dictionary that stores the results.
         """
-        print('reading the input file...')
+        _report_progress('reading the input file...', verbose)
         try:
             smiles_iterator = load_smiles_file(smiles_file_path)
         except ValueError as exc:
@@ -3308,14 +3318,14 @@ class Counter:
                 'ERROR: The file type cannot be read, use the.txt/.xlsx/.csv file as the input file.') from exc
 
         mol_number = len(smiles_iterator)
-        print('Done, totally detected {} molecules, start counting...'.format(mol_number))
+        _report_progress('Done, totally detected {} molecules, start counting...'.format(mol_number), verbose)
         task = [delayed(self.count_a_mol)(i, add_note=add_note, add_smiles=add_smiles) for i in smiles_iterator]
         count_result_dict_list = Parallel(n_jobs=n_jobs, batch_size=batch_size)(task)
-        print('Done!')
-        print('writing to csv...')
+        _report_progress('Done!', verbose)
+        _report_progress('writing to csv...', verbose)
         result = pd.DataFrame(count_result_dict_list)
         result.to_csv(count_result_file_path, index_label='index')
-        print('Done!')
+        _report_progress('Done!', verbose)
         return result
 
     def count_mols_parallel(self, *args, **kwargs):
