@@ -286,6 +286,36 @@ class ConvertorSmokeTests(unittest.TestCase):
         finally:
             builtins.__import__ = original_import
 
+    def test_convertor_reports_invalid_smiles_for_xyz(self):
+        from groupy.gp_convertor import Convertor
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            xyz_path = Path(tmpdir) / "invalid.xyz"
+
+            with self.assertLogs("groupy.gp_convertor", level="WARNING") as log_context:
+                result = Convertor.smi_to_xyz("not-a-smiles", str(xyz_path))
+
+            self.assertFalse(result)
+            self.assertFalse(xyz_path.exists())
+            self.assertIn("Failed to parse SMILES", log_context.output[0])
+
+    def test_convert_file_type_surfaces_missing_openbabel_hint(self):
+        from groupy.gp_convertor import Convertor
+
+        original_import = builtins.__import__
+
+        def block_openbabel(name, globals=None, locals=None, fromlist=(), level=0):
+            if name == "openbabel":
+                raise ImportError("blocked for test")
+            return original_import(name, globals, locals, fromlist, level)
+
+        builtins.__import__ = block_openbabel
+        try:
+            with self.assertRaisesRegex(ImportError, "conda install -c conda-forge openbabel"):
+                Convertor.convert_file_type("xyz", "missing.xyz", "mol")
+        finally:
+            builtins.__import__ = original_import
+
     @unittest.skipUnless(importlib.util.find_spec("openbabel"), "OpenBabel is required by gp_convertor")
     def test_batch_smi_to_xyz_does_not_write_logs_by_default(self):
         from groupy.gp_convertor import Convertor
@@ -386,6 +416,42 @@ class ConvertorSmokeTests(unittest.TestCase):
 
 
 class GeneratorSmokeTests(unittest.TestCase):
+    def test_smi_to_gjf_returns_false_when_xyz_conversion_fails(self):
+        from groupy import gp_generator
+        from groupy.gp_generator import Generator
+
+        original_convertor = gp_generator.Convertor
+
+        class FailingConvertor:
+            def smi_to_xyz(self, smi, xyz_path=None):
+                return False
+
+        gp_generator.Convertor = FailingConvertor
+        try:
+            with tempfile.TemporaryDirectory() as tmpdir:
+                gjf_path = Path(tmpdir) / "molecule.gjf"
+
+                with self.assertLogs("groupy.gp_generator", level="WARNING") as log_context:
+                    result = Generator().smi_to_gjf(
+                        "C1CCCC1",
+                        gjf_path=str(gjf_path),
+                        chk_path=str(Path(tmpdir) / "molecule.chk"),
+                        charge_and_multiplicity="0 1",
+                    )
+
+                self.assertFalse(result)
+                self.assertFalse(gjf_path.exists())
+                self.assertIn("Failed to generate gjf", log_context.output[0])
+        finally:
+            gp_generator.Convertor = original_convertor
+
+    def test_generator_rejects_invalid_smiles_for_charge(self):
+        from groupy.exceptions import InvalidSmilesError
+        from groupy.gp_generator import Generator
+
+        with self.assertRaises(InvalidSmilesError):
+            Generator().calculate_charge("not-a-smiles")
+
     @unittest.skipUnless(importlib.util.find_spec("openbabel"), "OpenBabel is required by gp_generator")
     def test_batch_smi_to_gjf_does_not_write_logs_by_default(self):
         from groupy.gp_generator import Generator

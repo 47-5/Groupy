@@ -118,10 +118,13 @@ Current file handling status:
 - [ ] Replace bare `except:` blocks with specific exceptions.
   - [x] `Calculator.calculate_a_mol()` now catches expected calculation/input errors explicitly.
   - [x] `Counter.count_a_mol()` now catches expected invalid-input errors explicitly.
+  - [x] `Convertor` file conversion paths now catch explicit conversion exceptions.
+  - [x] `Generator.smi_to_gjf()` now catches explicit generation/input exceptions.
 - [x] Replace `raise NotImplemented(...)` with `NotImplementedError` or `ValueError`.
 - [ ] Move user-facing `print()` calls toward the CLI layer.
 - [ ] Use `logging` in library code.
   - [x] Use module loggers for invalid SMILES in core calculator/counter paths.
+  - [x] Use module loggers for conversion and Gaussian input generation failures.
 - [ ] For batch processing, continue processing failed molecules only when configured to do so.
 - [ ] Preserve enough failure detail to debug invalid SMILES, unsupported formats, and dependency problems.
   - [x] Add `InvalidSmilesError` for failed SMILES parsing.
@@ -132,8 +135,11 @@ Current exception/error reporting status:
 
 - `groupy.chem.ensure_mol()` validates SMILES and suppresses low-level RDKit parse logs.
 - `groupy.exceptions.InvalidSmilesError` represents expected SMILES parsing failures.
+- `groupy.exceptions.ConversionError` represents expected molecule/file conversion failures.
 - Invalid single-molecule calculations return the legacy placeholder values plus a diagnostic `error` field.
 - Unexpected bugs in core calculation/counting are no longer hidden by bare `except:` blocks.
+- Conversion and Gaussian generation no longer hide missing OpenBabel install errors.
+- `Generator.smi_to_gjf()` cleans temporary xyz files in a `finally` block.
 
 ## Phase 6: Dependency Boundaries And Lazy Imports
 

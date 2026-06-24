@@ -7,3 +7,7 @@ class GroupyError(Exception):
 
 class InvalidSmilesError(GroupyError, ValueError):
     """Raised when a SMILES string cannot be parsed into a molecule."""
+
+
+class ConversionError(GroupyError):
+    """Raised when a molecule or file conversion step fails."""

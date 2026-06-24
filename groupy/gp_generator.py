@@ -1,3 +1,4 @@
+import logging
 from rdkit import Chem
 import os
 from tqdm import tqdm
@@ -5,9 +6,14 @@ from joblib import Parallel, delayed
 import time
 import random
 
+from groupy.chem import ensure_mol
+from groupy.exceptions import ConversionError, InvalidSmilesError
 from groupy.gp_convertor import Convertor
 from groupy.gp_tool import Tool
 from groupy.io import write_text_lines
+
+logger = logging.getLogger(__name__)
+GENERATION_EXCEPTIONS = (ConversionError, InvalidSmilesError, TypeError, OSError, RuntimeError, ValueError)
 
 
 class Generator:
@@ -26,8 +32,7 @@ class Generator:
         :param smi: SMILES str or instance of rdkit.Chem.rdchem.Mol
         :return: (int, int). (net charge, all charge)
         """
-        if isinstance(smi, str):
-            smi = Chem.MolFromSmiles(smi)
+        smi = ensure_mol(smi)
         smi = Chem.AddHs(smi)  # add H
         net_charge = 0
         all_charge = 0
@@ -49,8 +54,7 @@ class Generator:
         :param smi: SMILES str or instance of rdkit.Chem.rdchem.Mol
         :return: (int, int). (net charge, all charge)
         """
-        if isinstance(smi, str):
-            smi = Chem.MolFromSmiles(smi)
+        smi = ensure_mol(smi)
         net_charge, all_charge = self.calculate_charge(smi)
         alpha_minus_beta = all_charge % 2
         multiplicity = alpha_minus_beta + 1
@@ -87,20 +91,23 @@ class Generator:
         # default task
         if gaussian_keywords is None:
             gaussian_keywords = '#p opt freq b3lyp/6-31g*'
-        # default charge and multiplicity
-        if charge_and_multiplicity is None:
-            charge_and_multiplicity = f'{self.calculate_charge(smi)[0]} {self.calculate_multiplicity(smi)}'
         # default other tasks
         if other_tasks is None:
             other_tasks = [
                 '#p m062x/def2tzvp geom=check',
                 '#p m062x/def2tzvp scrf=solvent=water geom=check',
             ]
+        temp_xyz_path = None
         try:
+            # default charge and multiplicity
+            if charge_and_multiplicity is None:
+                charge_and_multiplicity = f'{self.calculate_charge(smi)[0]} {self.calculate_multiplicity(smi)}'
+
             # read smi
             c = Convertor()
             temp_xyz_path = f'temp_{str(time.time()) + str(random.randint(0,1000000000000000000))}.xyz'
-            c.smi_to_xyz(smi=smi, xyz_path=temp_xyz_path)
+            if not c.smi_to_xyz(smi=smi, xyz_path=temp_xyz_path):
+                raise ConversionError(f'Failed to convert {smi} to xyz coordinates.')
 
             # write gjf
             # 判断是否存在同名gjf
@@ -119,12 +126,13 @@ class Generator:
                                                      note=smi, old_chk_path=chk_path, add_link1=True)
                     self.write_gjf_blank_line(gjf_path=gjf_path, blank_line_number=2)
 
-            # 删除临时xyz文件
-            os.remove(temp_xyz_path)
             return True
-        except:
-            print(f'Error! There is something wrong when converting {smi} to gjf file, please check it.')
+        except GENERATION_EXCEPTIONS as exc:
+            logger.warning("Failed to generate gjf for %r: %s", smi, exc)
             return False
+        finally:
+            if temp_xyz_path is not None and os.path.exists(temp_xyz_path):
+                os.remove(temp_xyz_path)
 
     def batch_smi_to_gjf(self, smiles_file_path, gjf_root_path=None,
                          nproc='12', mem='12GB',

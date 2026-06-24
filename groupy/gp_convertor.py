@@ -1,3 +1,4 @@
+import logging
 import os
 from rdkit import Chem
 from rdkit.Chem import AllChem
@@ -5,8 +6,13 @@ from tqdm import tqdm
 from joblib import Parallel, delayed
 from pprint import pprint
 
+from groupy.chem import ensure_mol
+from groupy.exceptions import InvalidSmilesError
 from groupy.gp_tool import Tool
 from groupy.io import write_text_lines
+
+logger = logging.getLogger(__name__)
+CONVERSION_EXCEPTIONS = (OSError, RuntimeError, StopIteration, ValueError)
 
 
 def _load_pybel():
@@ -40,9 +46,10 @@ class Convertor:
         :param xyz_path: str. Path of xyz file you want to generate. Default={smi}.xyz
         :return: bool. True if the xyz file is successfully generated.
         """
-        mol = Chem.MolFromSmiles(smi)
-        if mol is None:
-            print(f'can not read {smi}, please check your SMILES')
+        try:
+            mol = ensure_mol(smi)
+        except InvalidSmilesError as exc:
+            logger.warning("Failed to parse SMILES %r for xyz conversion: %s", smi, exc)
             return False
 
         mol_with_h = Chem.AddHs(mol)
@@ -58,20 +65,8 @@ class Convertor:
             if mol.make3D() is None:
                 opt = mol.write("mol")
             else:
-                print(f'Error! There is something wrong when converting {smi} to xyz file, please check it.')
+                logger.warning("OpenBabel failed to generate 3D coordinates for %r", smi)
                 return False
-
-        # Windows 下pybel有问题
-        # try:
-        #     mol = pybel.readstring("smi", smi)
-        #     mol.addh()
-        #     if mol.make3D() is None:
-        #         opt = mol.write("mol")
-        #     else:
-        #         return False
-        # except:
-        #     AllChem.MMFFOptimizeMolecule(mol_with_h)
-        #     opt = Chem.MolToMolBlock(mol_with_h)
 
         if xyz_path is None:
             xyz_path = smi + '.xyz'
@@ -176,8 +171,8 @@ class Convertor:
         :param out_format: str. Target format.
         :param out_path: str. Target file path. If set to None, out_path will be same as in_path except its suffix.
         """
+        pybel = _load_pybel()
         try:
-            pybel = _load_pybel()
             mol = pybel.readfile(in_format, in_path).__next__()
             # print('The SMILES of this system is :')
             # print(mol.write('smi'))
@@ -187,8 +182,8 @@ class Convertor:
                 out_path = out_path[0] + '.' + out_format
             mol.write(out_format, out_path, overwrite=True)
             return None
-        except:
-            print(f'Error! There is something wrong when converting {in_path}, please check it.')
+        except CONVERSION_EXCEPTIONS as exc:
+            logger.warning("Failed to convert %s from %s to %s: %s", in_path, in_format, out_format, exc)
             return None
 
     def batch_convert_file_type(self, in_format, in_root_path, out_format, out_root_path=None):
@@ -222,8 +217,8 @@ class Convertor:
             try:
                 self.convert_file_type(in_format=in_format, in_path=in_file_path[index],
                                        out_format=out_format, out_path=out_file_path[index])
-            except:
-                # print('Warning!!!')
+            except CONVERSION_EXCEPTIONS as exc:
+                logger.warning("Failed to convert %s: %s", in_file_path[index], exc)
                 error_in_file_path.append(in_file_path[index])
                 # print('There may something wrong in {}, please check it carefully!'.format(in_file_path[index]))
 
@@ -283,14 +278,14 @@ class Convertor:
         :param format: str. Format of the file.
         :return: SMILES
         """
+        pybel = _load_pybel()
         try:
-            pybel = _load_pybel()
             atoms = next(pybel.readfile(format=format, filename=file_path))
             smi = atoms.write(format='smi').split('\t')[0]
             # print(smi)
             return smi
-        except:
-            print('There may something wrong in {}, please check it carefully!'.format(file_path))
+        except CONVERSION_EXCEPTIONS as exc:
+            logger.warning("Failed to read SMILES from %s as %s: %s", file_path, format, exc)
             return 'There may something wrong in {}, please check it carefully!'.format(file_path)
 
     def batch_file_to_smi(self, in_format, in_root_path, out_root_path=None):
@@ -319,8 +314,8 @@ class Convertor:
         for index in tqdm(range(len(in_file_path))):
             try:
                 smi_list.append(self.file_to_smi(format=in_format, file_path=in_file_path[index]))
-            except:
-                # print('Warning!!!')
+            except CONVERSION_EXCEPTIONS as exc:
+                logger.warning("Failed to read SMILES from %s: %s", in_file_path[index], exc)
                 error_in_file_path.append(in_file_path[index])
                 # print('There may something wrong in {}, please check it carefully!'.format(in_file_path[index]))
 
