@@ -5,6 +5,7 @@ __version__ = "3.0.0"
 __all__ = [
     "api",
     "cli",
+    "io",
     "gp_loader",
     "gp_tool",
     "gp_viewer",

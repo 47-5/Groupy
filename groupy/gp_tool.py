@@ -1,5 +1,7 @@
 import pandas as pd
 
+from groupy.io import load_smiles_file
+
 
 class Tool:
     """
@@ -19,17 +21,10 @@ class Tool:
         :return: Iterator.
         """
         print('reading input file...')
-        if smiles_file_path.endswith('.txt'):
-            with open(smiles_file_path, encoding='utf-8') as file:
-                smiles_iterator = list(file)
-        elif smiles_file_path.endswith('.xlsx'):
-            smiles_iterator = pd.read_excel(smiles_file_path)['smiles']
-        elif smiles_file_path.endswith('.csv'):
-            smiles_iterator = pd.read_csv(smiles_file_path)['smiles']
-        else:
-            raise NotImplementedError('无法识别的文件类型，请以.txt/.xlsx/.csv类型的文件作为输入。')
-        smiles_iterator = [i.strip() for i in smiles_iterator]
-        return smiles_iterator
+        try:
+            return load_smiles_file(smiles_file_path)
+        except ValueError as exc:
+            raise NotImplementedError('无法识别的文件类型，请以.txt/.xlsx/.csv类型的文件作为输入。') from exc
 
 
 def export_a_dict(result_dict, export_path='result.csv'):

@@ -6,6 +6,7 @@ from joblib import Parallel, delayed
 
 from groupy.gp_loader import Loader
 from groupy.gp_counter import Counter
+from groupy.io import load_smiles_file
 
 
 class Calculator:
@@ -438,13 +439,9 @@ class Calculator:
         :return: instance of pandas.DataFrame
         """
         print('reading input file...')
-        if smiles_file_path.endswith('.txt'):
-            smiles_iterator = list(open(smiles_file_path))
-        elif smiles_file_path.endswith('.xlsx'):
-            smiles_iterator = pd.read_excel(smiles_file_path)['smiles']
-        elif smiles_file_path.endswith('.csv'):
-            smiles_iterator = pd.read_csv(smiles_file_path)['smiles']
-        else:
+        try:
+            smiles_iterator = load_smiles_file(smiles_file_path)
+        except ValueError:
             print('无法识别的文件类型，请以.txt/.xlsx/.csv类型的文件作为输入。')
             return None
         mol_number = len(smiles_iterator)
@@ -480,13 +477,9 @@ class Calculator:
         :return: instance of pandas.DataFrame
         """
         print('reading input file...')
-        if smiles_file_path.endswith('.txt'):
-            smiles_iterator = list(open(smiles_file_path))
-        elif smiles_file_path.endswith('.xlsx'):
-            smiles_iterator = pd.read_excel(smiles_file_path)['smiles']
-        elif smiles_file_path.endswith('.csv'):
-            smiles_iterator = pd.read_csv(smiles_file_path)['smiles']
-        else:
+        try:
+            smiles_iterator = load_smiles_file(smiles_file_path)
+        except ValueError:
             print('无法识别的文件类型，请以.txt/.xlsx/.csv类型的文件作为输入。')
             return None
         mol_number = len(smiles_iterator)

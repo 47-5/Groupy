@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -8,11 +9,11 @@ from pathlib import Path
 
 import pandas as pd
 
-from groupy.api import load_smiles_file
 from groupy.gp_calculator import Calculator
 from groupy.gp_counter import Counter
 from groupy.gp_loader import Loader
 from groupy.gp_tool import Tool
+from groupy.io import load_smiles_file
 
 
 class LoaderSmokeTests(unittest.TestCase):
@@ -41,6 +42,44 @@ class CoreChemistrySmokeTests(unittest.TestCase):
         self.assertAlmostEqual(result["Tb/K"], 308.65)
         self.assertAlmostEqual(result["Pc/bar"], 42.659)
         self.assertEqual(result["note"], "C1CCCC1 at 298K")
+
+    def test_counter_batch_uses_shared_smiles_loader(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            input_path = tmp_path / "smiles.txt"
+            output_path = tmp_path / "count.csv"
+            input_path.write_text("C1CCCC1\n", encoding="utf-8")
+
+            result = Counter().count_mols(
+                str(input_path),
+                count_result_file_path=str(output_path),
+                add_smiles=True,
+            )
+
+            self.assertEqual(result.loc[0, "smiles"], "C1CCCC1")
+            self.assertEqual(result.loc[0, "f_168"], 5)
+            self.assertTrue(output_path.exists())
+
+    def test_calculator_batch_uses_shared_smiles_loader(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            input_path = tmp_path / "smiles.txt"
+            output_path = tmp_path / "calculate.csv"
+            input_path.write_text("C1CCCC1\n", encoding="utf-8")
+
+            original_cwd = Path.cwd()
+            os.chdir(tmp_path)
+            try:
+                result = Calculator().calculate_mols(
+                    str(input_path),
+                    properties_file_path=str(output_path),
+                )
+            finally:
+                os.chdir(original_cwd)
+
+            self.assertEqual(result.loc[0, "smiles"], "C1CCCC1")
+            self.assertAlmostEqual(result.loc[0, "molar_mass"], 70.135)
+            self.assertTrue(output_path.exists())
 
 
 class SmilesFileSmokeTests(unittest.TestCase):

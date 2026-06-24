@@ -96,11 +96,17 @@ Current CLI behavior:
 ## Phase 4: File And Path Handling
 
 - [ ] Replace scattered `os.path` logic with `pathlib.Path` where practical.
-- [ ] Centralize SMILES file loading into one helper.
-- [ ] Replace `list(open(...))` with context-managed file reads.
-- [ ] Use explicit encodings for text files.
+- [x] Centralize SMILES file loading into one helper.
+- [x] Replace `list(open(...))` with context-managed file reads for SMILES input.
+- [x] Use explicit encodings for text SMILES files.
 - [ ] Avoid writing implicit side-effect files such as `error.txt`, `xyz_fail.txt`, and `gjf_fail.txt` to the current working directory unless requested.
 - [ ] Make batch output paths predictable and configurable.
+
+Current file handling status:
+
+- `groupy.io.load_smiles_file()` is the shared loader for `.txt`, `.csv`, and `.xlsx` SMILES inputs.
+- `groupy.api`, `groupy.gp_tool.Tool`, `Calculator.calculate_mols*`, and `Counter.count_mols*` use the shared loader.
+- Existing side-effect files such as `error.txt`, `xyz_fail.txt`, and `gjf_fail.txt` still need cleanup in later steps.
 
 ## Phase 5: Exceptions, Logging, And Error Reporting
 

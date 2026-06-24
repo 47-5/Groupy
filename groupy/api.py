@@ -3,31 +3,11 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from pathlib import Path
 from typing import Any
-
-import pandas as pd
 
 from groupy.gp_calculator import Calculator
 from groupy.gp_counter import Counter
-
-
-def load_smiles_file(path: str | Path) -> list[str]:
-    """Load SMILES strings from a txt, csv, or xlsx file."""
-    input_path = Path(path)
-    suffix = input_path.suffix.lower()
-
-    if suffix == ".txt":
-        with input_path.open(encoding="utf-8") as file:
-            smiles = [line.strip() for line in file]
-    elif suffix == ".csv":
-        smiles = _load_smiles_column(pd.read_csv(input_path), input_path)
-    elif suffix == ".xlsx":
-        smiles = _load_smiles_column(pd.read_excel(input_path), input_path)
-    else:
-        raise ValueError("Input file must use .txt, .csv, or .xlsx format.")
-
-    return [item for item in smiles if item]
+from groupy.io import load_smiles_file, write_records_csv
 
 
 def count_smiles(
@@ -99,15 +79,3 @@ def calculate_many_smiles(
         for smiles in smiles_values
     ]
 
-
-def write_records_csv(records: list[dict[str, Any]], path: str | Path) -> None:
-    """Write result records to a CSV file."""
-    output_path = Path(path)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    pd.DataFrame(records).to_csv(output_path, index=False)
-
-
-def _load_smiles_column(dataframe: pd.DataFrame, path: Path) -> list[str]:
-    if "smiles" not in dataframe.columns:
-        raise ValueError(f"{path} must contain a 'smiles' column.")
-    return [str(value).strip() for value in dataframe["smiles"].dropna()]
