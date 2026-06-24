@@ -33,6 +33,15 @@ def write_records_csv(records: list[dict[str, Any]], path: str | Path) -> None:
     pd.DataFrame(records).to_csv(output_path, index=False)
 
 
+def write_text_lines(lines: list[str], path: str | Path) -> None:
+    """Write one text item per line."""
+    output_path = Path(path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("w", encoding="utf-8") as file:
+        for line in lines:
+            file.write(f"{line}\n")
+
+
 def _load_smiles_column(dataframe: pd.DataFrame, path: Path) -> list[str]:
     if "smiles" not in dataframe.columns:
         raise ValueError(f"{path} must contain a 'smiles' column.")

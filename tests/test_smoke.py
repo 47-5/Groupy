@@ -80,6 +80,31 @@ class CoreChemistrySmokeTests(unittest.TestCase):
             self.assertEqual(result.loc[0, "smiles"], "C1CCCC1")
             self.assertAlmostEqual(result.loc[0, "molar_mass"], 70.135)
             self.assertTrue(output_path.exists())
+            self.assertFalse((tmp_path / "error.txt").exists())
+
+    def test_calculator_batch_writes_error_file_only_when_requested(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            input_path = tmp_path / "smiles.txt"
+            output_path = tmp_path / "calculate.csv"
+            error_path = tmp_path / "errors.txt"
+            input_path.write_text("C1CCCC1\n", encoding="utf-8")
+
+            calculator = Calculator()
+
+            def fail_calculation(*args, **kwargs):
+                raise ValueError("forced failure")
+
+            calculator.calculate_a_mol = fail_calculation
+            result = calculator.calculate_mols(
+                str(input_path),
+                properties_file_path=str(output_path),
+                error_file_path=str(error_path),
+            )
+
+            self.assertTrue(result.empty)
+            self.assertEqual(error_path.read_text(encoding="utf-8"), "C1CCCC1\n")
+            self.assertTrue(output_path.exists())
 
 
 class SmilesFileSmokeTests(unittest.TestCase):

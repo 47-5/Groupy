@@ -6,7 +6,7 @@ from joblib import Parallel, delayed
 
 from groupy.gp_loader import Loader
 from groupy.gp_counter import Counter
-from groupy.io import load_smiles_file
+from groupy.io import load_smiles_file, write_text_lines
 
 
 class Calculator:
@@ -428,7 +428,8 @@ class Calculator:
                     'ISP': '?',
                     'note': 'There must be something wrong with this SMILES'}
 
-    def calculate_mols(self, smiles_file_path, properties_file_path='gp_3x_result.csv', check_hydrocarbon=True, parameter_type='step_wise'):
+    def calculate_mols(self, smiles_file_path, properties_file_path='gp_3x_result.csv',
+                       check_hydrocarbon=True, parameter_type='step_wise', error_file_path=None):
         """
         Calculating properties of a batch of molecules.
         :param smiles_file_path: path of the file(.txt, .xlsx, .csv) in which saved SMILES.
@@ -436,6 +437,7 @@ class Calculator:
         :param check_hydrocarbon: bool. Since Calculator.delta_Hc() was designed for hydrocarbon, if set to True, Calculator will check whether the molecule is hydrocarbon.
         If the molecule is not hydrocarbon, Calculator will not calculate delta_Hc, q and ISP. If set to False, Calculator will calculate these properties no matter whether the molecule is hydrocarbon.
         Default=True.
+        :param error_file_path: optional path for writing SMILES strings that failed during batch calculation.
         :return: instance of pandas.DataFrame
         """
         print('reading input file...')
@@ -452,15 +454,14 @@ class Calculator:
         for i in tqdm(smiles_iterator):
             try:
                 properties_dict_list.append(self.calculate_a_mol(i, check_hydrocarbon=check_hydrocarbon, parameter_type=parameter_type))
-            except:
+            except Exception:
                 error_smi.append(i)
         print('calculation completed!')
         print('start to export result to {} ...'.format(properties_file_path))
         result = pd.DataFrame(properties_dict_list)
         result.to_csv(properties_file_path, index_label='index')
-        with open('error.txt', 'w') as f:
-            for i in error_smi:
-                f.write(i + '\n')
+        if error_file_path is not None:
+            write_text_lines(error_smi, error_file_path)
         print('Done!')
         return result
 
