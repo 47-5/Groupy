@@ -11,8 +11,6 @@ import json
 from pathlib import Path
 from typing import Sequence
 
-import pandas as pd
-
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -28,12 +26,17 @@ def build_parser() -> argparse.ArgumentParser:
 
     count_parser = subparsers.add_parser(
         "count",
-        help="count molecular groups for a SMILES string",
+        help="count molecular groups",
     )
-    count_parser.add_argument(
+    count_input = count_parser.add_mutually_exclusive_group(required=True)
+    count_input.add_argument(
         "--smiles",
-        required=True,
         help="SMILES string to analyze",
+    )
+    count_input.add_argument(
+        "--input",
+        type=Path,
+        help="txt, csv, or xlsx file containing SMILES values",
     )
     count_parser.add_argument(
         "--include-zero",
@@ -51,6 +54,37 @@ def build_parser() -> argparse.ArgumentParser:
         help="optional CSV path for saving the result",
     )
 
+    calculate_parser = subparsers.add_parser(
+        "calculate",
+        help="calculate molecular properties",
+    )
+    calculate_input = calculate_parser.add_mutually_exclusive_group(required=True)
+    calculate_input.add_argument(
+        "--smiles",
+        help="SMILES string to analyze",
+    )
+    calculate_input.add_argument(
+        "--input",
+        type=Path,
+        help="txt, csv, or xlsx file containing SMILES values",
+    )
+    calculate_parser.add_argument(
+        "--parameter-type",
+        choices=["step_wise", "simultaneous"],
+        default="step_wise",
+        help="group contribution parameter type",
+    )
+    calculate_parser.add_argument(
+        "--no-check-hydrocarbon",
+        action="store_true",
+        help="calculate combustion-related properties without hydrocarbon filtering",
+    )
+    calculate_parser.add_argument(
+        "--output",
+        type=Path,
+        help="optional CSV path for saving the result",
+    )
+
     return parser
 
 
@@ -62,21 +96,61 @@ def _run_legacy_interactive() -> int:
 
 
 def _run_count(args: argparse.Namespace) -> int:
-    from groupy.gp_counter import Counter
+    from groupy.api import count_many_smiles, count_smiles, load_smiles_file, write_records_csv
 
-    result = Counter().count_a_mol(
-        args.smiles,
-        clear_mode=not args.include_zero,
-        add_smiles=not args.no_smiles,
-    )
+    if args.smiles:
+        records = [
+            count_smiles(
+                args.smiles,
+                include_zero=args.include_zero,
+                include_smiles=not args.no_smiles,
+            )
+        ]
+    else:
+        records = count_many_smiles(
+            load_smiles_file(args.input),
+            include_zero=args.include_zero,
+            include_smiles=not args.no_smiles,
+        )
 
     if args.output:
-        args.output.parent.mkdir(parents=True, exist_ok=True)
-        pd.DataFrame([result]).to_csv(args.output, index=False)
+        write_records_csv(records, args.output)
     else:
-        print(json.dumps(result, ensure_ascii=False, sort_keys=True))
+        print(_format_json_output(records, single=bool(args.smiles)))
 
     return 0
+
+
+def _run_calculate(args: argparse.Namespace) -> int:
+    from groupy.api import calculate_many_smiles, calculate_smiles, load_smiles_file, write_records_csv
+
+    check_hydrocarbon = not args.no_check_hydrocarbon
+    if args.smiles:
+        records = [
+            calculate_smiles(
+                args.smiles,
+                check_hydrocarbon=check_hydrocarbon,
+                parameter_type=args.parameter_type,
+            )
+        ]
+    else:
+        records = calculate_many_smiles(
+            load_smiles_file(args.input),
+            check_hydrocarbon=check_hydrocarbon,
+            parameter_type=args.parameter_type,
+        )
+
+    if args.output:
+        write_records_csv(records, args.output)
+    else:
+        print(_format_json_output(records, single=bool(args.smiles)))
+
+    return 0
+
+
+def _format_json_output(records: list[dict], *, single: bool) -> str:
+    payload = records[0] if single else records
+    return json.dumps(payload, ensure_ascii=False, sort_keys=True)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -87,6 +161,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _run_legacy_interactive()
     if args.command == "count":
         return _run_count(args)
+    if args.command == "calculate":
+        return _run_calculate(args)
 
     parser.error(f"Unsupported command: {args.command}")
     return 2

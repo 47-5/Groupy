@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from groupy.api import load_smiles_file
 from groupy.gp_calculator import Calculator
 from groupy.gp_counter import Counter
 from groupy.gp_loader import Loader
@@ -59,6 +60,9 @@ class SmilesFileSmokeTests(unittest.TestCase):
             self.assertEqual(Tool.load_smiles_iterator(str(txt_path)), expected)
             self.assertEqual(Tool.load_smiles_iterator(str(csv_path)), expected)
             self.assertEqual(Tool.load_smiles_iterator(str(xlsx_path)), expected)
+            self.assertEqual(load_smiles_file(txt_path), expected)
+            self.assertEqual(load_smiles_file(csv_path), expected)
+            self.assertEqual(load_smiles_file(xlsx_path), expected)
 
 
 class CliSmokeTests(unittest.TestCase):
@@ -126,6 +130,62 @@ class CliSmokeTests(unittest.TestCase):
             self.assertEqual(completed.returncode, 0, completed.stderr)
             result = pd.read_csv(output_path)
             self.assertEqual(result.to_dict(orient="records"), [{"f_168": 5, "smiles": "C1CCCC1"}])
+
+    def test_calculate_cli_outputs_json(self):
+        command = [
+            sys.executable,
+            "-m",
+            "groupy.cli",
+            "calculate",
+            "--smiles",
+            "C1CCCC1",
+        ]
+
+        completed = subprocess.run(
+            command,
+            text=True,
+            capture_output=True,
+            timeout=20,
+            check=False,
+        )
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        result = json.loads(completed.stdout)
+        self.assertEqual(result["smiles"], "C1CCCC1")
+        self.assertAlmostEqual(result["molar_mass"], 70.135)
+        self.assertAlmostEqual(result["Tb/K"], 308.65)
+        self.assertEqual(result["note"], "C1CCCC1 at 298K")
+
+    def test_calculate_cli_writes_csv_from_input_file(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            input_path = tmp_path / "smiles.txt"
+            output_path = tmp_path / "calculate.csv"
+            input_path.write_text("C1CCCC1\nCCO\n", encoding="utf-8")
+
+            command = [
+                sys.executable,
+                "-m",
+                "groupy.cli",
+                "calculate",
+                "--input",
+                str(input_path),
+                "--output",
+                str(output_path),
+            ]
+
+            completed = subprocess.run(
+                command,
+                text=True,
+                capture_output=True,
+                timeout=30,
+                check=False,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            result = pd.read_csv(output_path)
+            self.assertEqual(result["smiles"].tolist(), ["C1CCCC1", "CCO"])
+            self.assertIn("molar_mass", result.columns)
 
     @unittest.skipUnless(importlib.util.find_spec("openbabel"), "OpenBabel is required by the legacy interactive CLI")
     def test_legacy_cli_can_start_and_exit(self):

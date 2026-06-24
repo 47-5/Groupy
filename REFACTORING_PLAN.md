@@ -74,11 +74,13 @@ python -W error::ResourceWarning -m unittest discover -s tests
 The current `groupy_main.py` is a fully interactive menu. Preserve it initially, but introduce a modern CLI layer around the existing API.
 
 - [x] Add `groupy/cli.py`.
+- [x] Add `groupy/api.py` for non-interactive workflows shared by CLI and future GUI code.
 - [x] Move console entry point from `groupy.groupy_main:main` to the new CLI once ready.
 - [x] Preserve the old interactive menu as a subcommand or compatibility path.
 - [ ] Add scriptable commands such as:
   - [x] `Groupy count --smiles C1CCCC1`
-  - `groupy calculate --input SMILES.txt --output result.csv`
+  - [x] `Groupy calculate --smiles C1CCCC1`
+  - [x] `Groupy calculate --input SMILES.txt --output result.csv`
   - `groupy convert --input molecule.xyz --from xyz --to mol2 --output molecule.mol2`
 - [x] Keep command-line parsing separate from chemistry logic.
 
@@ -88,6 +90,8 @@ Current CLI behavior:
 - `Groupy interactive` starts the legacy interactive menu explicitly.
 - `Groupy count --smiles C1CCCC1` prints nonzero group counts as JSON.
 - `Groupy count --smiles C1CCCC1 --output count.csv` writes one-row CSV output.
+- `Groupy calculate --smiles C1CCCC1` prints calculated properties as JSON.
+- `Groupy calculate --input SMILES.txt --output calculate.csv` writes batch calculated properties to CSV.
 
 ## Phase 4: File And Path Handling
 
