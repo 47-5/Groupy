@@ -1,12 +1,36 @@
+import logging
 from rdkit import Chem
 from math import log
 import pandas as pd
 from tqdm import tqdm
 from joblib import Parallel, delayed
 
+from groupy.chem import ensure_mol
+from groupy.exceptions import InvalidSmilesError
 from groupy.gp_loader import Loader
 from groupy.gp_counter import Counter
 from groupy.io import load_smiles_file, write_text_lines
+
+logger = logging.getLogger(__name__)
+
+
+def _failed_calculation_result(smiles, error):
+    return {'smiles': smiles,
+            'molar_mass': '?',
+            'flash_point/K': '?',
+            'Tm/K': '?', 'Tb/K': '?', 'Tc/K': '?',
+            'Pc/bar': '?', 'Vc/(cm3/mol)': '?',
+            'density/(g/cm3)': '?',
+            'delta_G/(KJ/mol)': '?',
+            'delta_Hf/(KJ/mol)': '?',
+            'delta_Hvap/(KJ/mol)': '?',
+            'delta_Hfus/(KJ/mol)': '?',
+            'molar_volume/(cm3/mol)(default298K)': '?',
+            'delta_Hc/(KJ/mol)': '?',
+            'mass_calorific_value_h/(MJ/kg)': '?',
+            'ISP': '?',
+            'note': 'There must be something wrong with this SMILES',
+            'error': error}
 
 
 class Calculator:
@@ -344,9 +368,11 @@ class Calculator:
                     'note': value}
         """
         init_smi = mol
+        if parameter_type not in ['step_wise', 'simultaneous']:
+            raise ValueError('parameter_type must be "step_wise" or "simultaneous".')
+
         try:
-            if isinstance(mol, str):
-                mol = Chem.MolFromSmiles(mol)
+            mol = ensure_mol(mol)
             group_number = self.counter.count_a_mol(mol, clear_mode=True, add_note=True)
             if group_number.get('note', ''):
                 counter_note = group_number['note']
@@ -358,8 +384,6 @@ class Calculator:
                 parameters = self.parameters_step_wise
             elif parameter_type == 'simultaneous':
                 parameters = self.parameters_simultaneous
-            else:
-                raise NotImplemented('不可用的参数类型，只能使用step_wise或simultaneous')
 
             if debug:
                 print(group_number)
@@ -410,23 +434,9 @@ class Calculator:
                     'mass_calorific_value_h/(MJ/kg)': q,
                     'ISP': isp,
                     'note': counter_note + ' at 298K'}
-        except:
-            print(f'Error! There is something wrong when calculating {init_smi}, please check it.')
-            return {'smiles': init_smi,
-                    'molar_mass': '?',
-                    'flash_point/K': '?',
-                    'Tm/K': '?', 'Tb/K': '?', 'Tc/K': '?',
-                    'Pc/bar': '?', 'Vc/(cm3/mol)': '?',
-                    'density/(g/cm3)': '?',
-                    'delta_G/(KJ/mol)': '?',
-                    'delta_Hf/(KJ/mol)': '?',
-                    'delta_Hvap/(KJ/mol)': '?',
-                    'delta_Hfus/(KJ/mol)': '?',
-                    'molar_volume/(cm3/mol)(default298K)': '?',
-                    'delta_Hc/(KJ/mol)': '?',
-                    'mass_calorific_value_h/(MJ/kg)': '?',
-                    'ISP': '?',
-                    'note': 'There must be something wrong with this SMILES'}
+        except (InvalidSmilesError, TypeError, ValueError, KeyError, AttributeError, ArithmeticError) as exc:
+            logger.warning("Failed to calculate properties for %r: %s", init_smi, exc)
+            return _failed_calculation_result(init_smi, str(exc))
 
     def calculate_mols(self, smiles_file_path, properties_file_path='gp_3x_result.csv',
                        check_hydrocarbon=True, parameter_type='step_wise', error_file_path=None):
@@ -452,9 +462,9 @@ class Calculator:
         properties_dict_list = []
         error_smi = []
         for i in tqdm(smiles_iterator):
-            try:
-                properties_dict_list.append(self.calculate_a_mol(i, check_hydrocarbon=check_hydrocarbon, parameter_type=parameter_type))
-            except Exception:
+            result = self.calculate_a_mol(i, check_hydrocarbon=check_hydrocarbon, parameter_type=parameter_type)
+            properties_dict_list.append(result)
+            if result.get('error'):
                 error_smi.append(i)
         print('calculation completed!')
         print('start to export result to {} ...'.format(properties_file_path))

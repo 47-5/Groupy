@@ -1,13 +1,18 @@
+import logging
+
 from tqdm import tqdm
 from rdkit import Chem
 import pandas as pd
 from joblib import Parallel, delayed
 
+from groupy.chem import ensure_mol
+from groupy.exceptions import InvalidSmilesError
 from groupy.gp_loader import Loader
 from groupy.io import load_smiles_file
 
 
 __all__ = ["Counter", ]
+logger = logging.getLogger(__name__)
 
 
 # tool
@@ -3238,8 +3243,7 @@ class Counter:
         """
         init_smi = mol
         try:
-            if isinstance(mol, str):
-                mol = Chem.MolFromSmiles(mol)
+            mol = ensure_mol(mol)
             self.result = self.init_result.copy()
             if add_note:
                 # self.result['note'] = ''
@@ -3253,8 +3257,8 @@ class Counter:
                 # 清爽模式,不显示没有统计到的基团
                 self.result = {k: v for k, v in self.result.items() if v}
             return self.result
-        except:
-            print(f'Error! There is something wrong when counting {init_smi}, please check it.')
+        except (InvalidSmilesError, TypeError) as exc:
+            logger.warning("Failed to count groups for %r: %s", init_smi, exc)
             return self.init_result.copy()
 
     def count_mols(self, smiles_file_path, count_result_file_path='count_result.csv', add_note=False, add_smiles=False):

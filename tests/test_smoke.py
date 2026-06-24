@@ -115,6 +115,28 @@ class CoreChemistrySmokeTests(unittest.TestCase):
         self.assertAlmostEqual(result["Pc/bar"], 42.659)
         self.assertEqual(result["note"], "C1CCCC1 at 298K")
 
+    def test_calculator_reports_invalid_smiles(self):
+        with self.assertLogs("groupy.gp_calculator", level="WARNING") as log_context:
+            result = Calculator().calculate_a_mol("not-a-smiles")
+
+        self.assertEqual(result["smiles"], "not-a-smiles")
+        self.assertEqual(result["molar_mass"], "?")
+        self.assertIn("Invalid SMILES", result["error"])
+        self.assertIn("Failed to calculate properties", log_context.output[0])
+
+    def test_calculator_rejects_unknown_parameter_type(self):
+        with self.assertRaisesRegex(ValueError, "parameter_type"):
+            Calculator().calculate_a_mol("C1CCCC1", parameter_type="unknown")
+
+    def test_counter_logs_invalid_smiles(self):
+        counter = Counter()
+
+        with self.assertLogs("groupy.gp_counter", level="WARNING") as log_context:
+            result = counter.count_a_mol("not-a-smiles")
+
+        self.assertEqual(result, counter.init_result)
+        self.assertIn("Failed to count groups", log_context.output[0])
+
     def test_counter_batch_uses_shared_smiles_loader(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp_path = Path(tmpdir)
@@ -160,22 +182,19 @@ class CoreChemistrySmokeTests(unittest.TestCase):
             input_path = tmp_path / "smiles.txt"
             output_path = tmp_path / "calculate.csv"
             error_path = tmp_path / "errors.txt"
-            input_path.write_text("C1CCCC1\n", encoding="utf-8")
+            input_path.write_text("not-a-smiles\n", encoding="utf-8")
 
-            calculator = Calculator()
+            with self.assertLogs("groupy.gp_calculator", level="WARNING"):
+                result = Calculator().calculate_mols(
+                    str(input_path),
+                    properties_file_path=str(output_path),
+                    error_file_path=str(error_path),
+                )
 
-            def fail_calculation(*args, **kwargs):
-                raise ValueError("forced failure")
-
-            calculator.calculate_a_mol = fail_calculation
-            result = calculator.calculate_mols(
-                str(input_path),
-                properties_file_path=str(output_path),
-                error_file_path=str(error_path),
-            )
-
-            self.assertTrue(result.empty)
-            self.assertEqual(error_path.read_text(encoding="utf-8"), "C1CCCC1\n")
+            self.assertEqual(result.loc[0, "smiles"], "not-a-smiles")
+            self.assertEqual(result.loc[0, "molar_mass"], "?")
+            self.assertIn("Invalid SMILES", result.loc[0, "error"])
+            self.assertEqual(error_path.read_text(encoding="utf-8"), "not-a-smiles\n")
             self.assertTrue(output_path.exists())
 
     def test_parallel_aliases_for_counter_and_calculator(self):
@@ -576,6 +595,31 @@ class CliSmokeTests(unittest.TestCase):
         self.assertAlmostEqual(result["molar_mass"], 70.135)
         self.assertAlmostEqual(result["Tb/K"], 308.65)
         self.assertEqual(result["note"], "C1CCCC1 at 298K")
+
+    def test_calculate_cli_reports_invalid_smiles_as_json(self):
+        command = [
+            sys.executable,
+            "-m",
+            "groupy.cli",
+            "calculate",
+            "--smiles",
+            "not-a-smiles",
+        ]
+
+        completed = subprocess.run(
+            command,
+            text=True,
+            capture_output=True,
+            timeout=20,
+            check=False,
+        )
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertEqual(completed.stderr, "")
+        result = json.loads(completed.stdout)
+        self.assertEqual(result["smiles"], "not-a-smiles")
+        self.assertEqual(result["molar_mass"], "?")
+        self.assertIn("Invalid SMILES", result["error"])
 
     def test_calculate_cli_writes_csv_from_input_file(self):
         with tempfile.TemporaryDirectory() as tmpdir:

@@ -116,11 +116,24 @@ Current file handling status:
 ## Phase 5: Exceptions, Logging, And Error Reporting
 
 - [ ] Replace bare `except:` blocks with specific exceptions.
-- [ ] Replace `raise NotImplemented(...)` with `NotImplementedError` or `ValueError`.
+  - [x] `Calculator.calculate_a_mol()` now catches expected calculation/input errors explicitly.
+  - [x] `Counter.count_a_mol()` now catches expected invalid-input errors explicitly.
+- [x] Replace `raise NotImplemented(...)` with `NotImplementedError` or `ValueError`.
 - [ ] Move user-facing `print()` calls toward the CLI layer.
 - [ ] Use `logging` in library code.
+  - [x] Use module loggers for invalid SMILES in core calculator/counter paths.
 - [ ] For batch processing, continue processing failed molecules only when configured to do so.
 - [ ] Preserve enough failure detail to debug invalid SMILES, unsupported formats, and dependency problems.
+  - [x] Add `InvalidSmilesError` for failed SMILES parsing.
+  - [x] Failed property calculation records now include an `error` field.
+  - [x] Batch calculation writes requested error SMILES from structured failed records.
+
+Current exception/error reporting status:
+
+- `groupy.chem.ensure_mol()` validates SMILES and suppresses low-level RDKit parse logs.
+- `groupy.exceptions.InvalidSmilesError` represents expected SMILES parsing failures.
+- Invalid single-molecule calculations return the legacy placeholder values plus a diagnostic `error` field.
+- Unexpected bugs in core calculation/counting are no longer hidden by bare `except:` blocks.
 
 ## Phase 6: Dependency Boundaries And Lazy Imports
 
@@ -213,6 +226,6 @@ Current parallel API status:
 
 Continue with Phase 7:
 
-1. Keep SMARTS/group-counting behavior unchanged while adding narrower tests around representative groups.
-2. Start replacing broad exception handling in batch paths with explicit errors and logging.
+1. Continue replacing broad exception handling in conversion/generation and legacy interactive paths.
+2. Move user-facing `print()` calls out of library batch methods where practical.
 3. After the core API is stable enough, begin the minimal PySide6 GUI shell.
