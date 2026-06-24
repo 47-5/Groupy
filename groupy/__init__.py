@@ -11,6 +11,7 @@ __all__ = [
     "chem",
     "cli",
     "exceptions",
+    "gui",
     "io",
     "gp_loader",
     "gp_tool",

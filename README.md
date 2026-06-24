@@ -20,6 +20,10 @@ Install visualization support when needed:
 
 `python -m pip install -e ".[viewer]"`
 
+Install desktop GUI support when needed:
+
+`python -m pip install -e ".[gui]"`
+
 Install conversion and Gaussian input generation support when needed:
 
 `conda install -c conda-forge openbabel` (**Do not** use `pip install openbabel`.)
@@ -33,6 +37,20 @@ For non-interactive use, one can run commands such as:
 `Groupy count --smiles C1CCCC1`
 
 `Groupy calculate --smiles C1CCCC1`
+
+To launch the desktop GUI after installing GUI support:
+
+`Groupy-GUI`
+
+For Python scripts or GUI integrations, use quiet batch calls:
+
+```python
+from groupy.gp_calculator import Calculator
+from groupy.gp_counter import Counter
+
+Calculator().calculate_mols("SMILES.txt", "calculate.csv", verbose=False)
+Counter().count_mols("SMILES.txt", "count.csv", add_smiles=True, verbose=False)
+```
 
 ### Manual and Documention
 The user manual is in the manual folder, and the API documentation can be found in the doc folder.

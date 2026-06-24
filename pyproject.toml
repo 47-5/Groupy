@@ -22,6 +22,9 @@ dependencies = [
 
 [project.optional-dependencies]
 convert = []
+gui = [
+    "PySide6",
+]
 viewer = [
     "ase",
 ]
@@ -32,6 +35,7 @@ dev = [
 
 [project.scripts]
 Groupy = "groupy.cli:main"
+Groupy-GUI = "groupy.gui:main"
 
 [project.urls]
 Homepage = "https://github.com/47-5/Groupy"

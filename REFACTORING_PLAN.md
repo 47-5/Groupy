@@ -199,8 +199,9 @@ Current parallel API status:
 - [ ] Update README with:
   - [x] editable install
   - [x] conda/OpenBabel note
-  - [ ] library API examples
+  - [x] library API examples
   - [x] CLI examples
+  - [x] GUI install and launch examples
 - [ ] Add a build check:
   - `python -m build`
 - [ ] Add GitHub Actions for:
@@ -212,18 +213,27 @@ Current parallel API status:
 
 ## Phase 9: Desktop GUI And Application Packaging
 
-- [ ] Choose GUI framework, currently recommended: PySide6.
-- [ ] Add a minimal `groupy/gui/` package.
-- [ ] Build first GUI screen for:
-  - SMILES input
-  - property calculation
-  - group counting
-  - CSV export
+- [x] Choose GUI framework: PySide6.
+- [x] Add a minimal `groupy/gui/` package.
+- [x] Add a `.[gui]` optional dependency group for PySide6.
+- [x] Add a `Groupy-GUI` entry point.
+- [x] Build first GUI screen for:
+  - [x] SMILES input
+  - [x] property calculation
+  - [x] group counting
+  - [x] CSV export
 - [ ] Add background worker handling so long calculations do not freeze the UI.
-- [ ] Add GUI smoke tests where practical.
+- [x] Add GUI smoke tests where practical.
 - [ ] Add packaging script for Windows executable builds.
 - [ ] Test the packaged app on a clean Windows environment.
 - [ ] Document limitations around OpenBabel and optional conversion features.
+
+Current GUI status:
+
+- PySide6 is not installed in the current `groupy_dev` environment.
+- `python -m groupy.gui --check` and `Groupy-GUI --check` report a clear install hint when PySide6 is missing.
+- `groupy.gui` imports without importing PySide6, so core CLI/API usage remains lightweight.
+- The first GUI window is implemented but still needs PySide6 installed for runtime visual QA.
 
 ## Current Known Review Findings
 
@@ -238,6 +248,6 @@ Current parallel API status:
 
 Continue with Phase 7:
 
-1. Continue replacing broad exception handling and direct prints in the legacy interactive path.
-2. Add README examples for `verbose=False` programmatic batch use.
-3. Begin the minimal PySide6 GUI shell once PySide6 availability is confirmed.
+1. Install or otherwise provide PySide6, then visually smoke-test `Groupy-GUI`.
+2. Add background worker handling so long calculations do not freeze the UI.
+3. Add a Windows packaging script for a double-clickable executable build.

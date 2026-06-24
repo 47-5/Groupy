@@ -98,6 +98,7 @@ class PackagingSmokeTests(unittest.TestCase):
 
         self.assertNotIn("ase", dependencies)
         self.assertEqual(optional_dependencies["viewer"], ["ase"])
+        self.assertEqual(optional_dependencies["gui"], ["PySide6"])
         self.assertEqual(optional_dependencies["convert"], [])
         self.assertIn("pytest", optional_dependencies["dev"])
 
@@ -727,6 +728,50 @@ class ViewerSmokeTests(unittest.TestCase):
                 _load_ase_read()
         finally:
             builtins.__import__ = original_import
+
+
+class GuiSmokeTests(unittest.TestCase):
+    def test_gui_module_does_not_import_pyside6_at_import_time(self):
+        command = [
+            sys.executable,
+            "-c",
+            "import sys; import groupy.gui; print('PySide6' in sys.modules)",
+        ]
+
+        completed = subprocess.run(
+            command,
+            text=True,
+            capture_output=True,
+            timeout=20,
+            check=False,
+        )
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertEqual(completed.stdout.strip(), "False")
+
+    def test_gui_check_reports_dependency_status(self):
+        command = [
+            sys.executable,
+            "-m",
+            "groupy.gui",
+            "--check",
+        ]
+
+        completed = subprocess.run(
+            command,
+            text=True,
+            capture_output=True,
+            timeout=20,
+            check=False,
+        )
+
+        if importlib.util.find_spec("PySide6"):
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            self.assertIn("PySide6 is available.", completed.stdout)
+        else:
+            self.assertEqual(completed.returncode, 1)
+            self.assertIn("python -m pip install -e", completed.stderr)
+            self.assertIn(".[gui]", completed.stderr)
 
 
 class CliSmokeTests(unittest.TestCase):
