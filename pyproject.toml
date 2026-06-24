@@ -28,7 +28,7 @@ dev = [
 ]
 
 [project.scripts]
-Groupy = "groupy.groupy_main:main"
+Groupy = "groupy.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/47-5/Groupy"

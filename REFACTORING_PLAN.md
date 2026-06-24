@@ -9,8 +9,30 @@ This document captures the agreed refactoring direction for Groupy. The guiding 
 - Make local development work with `python -m pip install -e .`.
 - Keep existing scientific behavior stable while changing project structure.
 - Separate library APIs from command-line interaction.
+- Prepare for a desktop GUI that ordinary users can launch by double-clicking.
 - Improve maintainability without rewriting the chemistry logic all at once.
 - Build a minimal regression test suite before deeper refactors.
+
+## GUI Target
+
+The final user-facing application should be a desktop GUI, not a web dashboard. The preferred route is PySide6/Qt because it supports a native-feeling Windows application and can be packaged into a double-clickable executable.
+
+Recommended GUI scope:
+
+- Single-molecule property calculation from SMILES.
+- Single-molecule group counting from SMILES.
+- Batch calculation from `.txt`, `.csv`, or `.xlsx`.
+- Batch group counting from `.txt`, `.csv`, or `.xlsx`.
+- CSV export for tabular results.
+- Clear dependency warnings for optional conversion/viewer features.
+
+Packaging target:
+
+- Windows executable or application folder built with PyInstaller or Nuitka.
+- No requirement for end users to open a terminal.
+- OpenBabel-dependent features should be optional or packaged only after dependency behavior is well understood.
+
+The GUI should call stable library APIs, not the legacy `input()` menu.
 
 ## Phase 1: Packaging And Repository Hygiene
 
@@ -51,14 +73,21 @@ python -W error::ResourceWarning -m unittest discover -s tests
 
 The current `groupy_main.py` is a fully interactive menu. Preserve it initially, but introduce a modern CLI layer around the existing API.
 
-- [ ] Add `groupy/cli.py`.
-- [ ] Move console entry point from `groupy.groupy_main:main` to the new CLI once ready.
-- [ ] Preserve the old interactive menu as a subcommand or compatibility path.
+- [x] Add `groupy/cli.py`.
+- [x] Move console entry point from `groupy.groupy_main:main` to the new CLI once ready.
+- [x] Preserve the old interactive menu as a subcommand or compatibility path.
 - [ ] Add scriptable commands such as:
-  - `groupy count --smiles C1CCCC1`
+  - [x] `Groupy count --smiles C1CCCC1`
   - `groupy calculate --input SMILES.txt --output result.csv`
   - `groupy convert --input molecule.xyz --from xyz --to mol2 --output molecule.mol2`
-- [ ] Keep command-line parsing separate from chemistry logic.
+- [x] Keep command-line parsing separate from chemistry logic.
+
+Current CLI behavior:
+
+- `Groupy` starts the legacy interactive menu.
+- `Groupy interactive` starts the legacy interactive menu explicitly.
+- `Groupy count --smiles C1CCCC1` prints nonzero group counts as JSON.
+- `Groupy count --smiles C1CCCC1 --output count.csv` writes one-row CSV output.
 
 ## Phase 4: File And Path Handling
 
@@ -112,6 +141,21 @@ The current `groupy_main.py` is a fully interactive menu. Preserve it initially,
   - package build
 - [ ] Keep generated API documentation separate from source documentation.
 
+## Phase 9: Desktop GUI And Application Packaging
+
+- [ ] Choose GUI framework, currently recommended: PySide6.
+- [ ] Add a minimal `groupy/gui/` package.
+- [ ] Build first GUI screen for:
+  - SMILES input
+  - property calculation
+  - group counting
+  - CSV export
+- [ ] Add background worker handling so long calculations do not freeze the UI.
+- [ ] Add GUI smoke tests where practical.
+- [ ] Add packaging script for Windows executable builds.
+- [ ] Test the packaged app on a clean Windows environment.
+- [ ] Document limitations around OpenBabel and optional conversion features.
+
 ## Current Known Review Findings
 
 - `Groupy.egg-info/`, `build/`, and `dist/` are tracked generated artifacts.
@@ -128,3 +172,5 @@ Start with Phase 1 and Phase 2:
 1. Remove generated artifacts from Git tracking.
 2. Add the first `pytest` smoke tests.
 3. Run editable install, compile, and tests after each small change.
+
+After Phase 2, prioritize Phase 3 API/CLI separation because the future GUI should call those same stable APIs.

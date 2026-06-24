@@ -20,6 +20,10 @@ Install for development:
 
 Then one can enter `Groupy` in terminal to start Groupy.
 
+For non-interactive use, one can run commands such as:
+
+`Groupy count --smiles C1CCCC1`
+
 ### Manual and Documention
 The user manual is in the manual folder, and the API documentation can be found in the doc folder.
 

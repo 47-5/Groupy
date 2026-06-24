@@ -1,4 +1,5 @@
 import importlib.util
+import json
 import subprocess
 import sys
 import tempfile
@@ -61,12 +62,78 @@ class SmilesFileSmokeTests(unittest.TestCase):
 
 
 class CliSmokeTests(unittest.TestCase):
+    def test_cli_import_does_not_load_openbabel_conversion_stack(self):
+        command = [
+            sys.executable,
+            "-c",
+            "import sys; import groupy.cli; print('groupy.gp_convertor' in sys.modules)",
+        ]
+
+        completed = subprocess.run(
+            command,
+            text=True,
+            capture_output=True,
+            timeout=20,
+            check=False,
+        )
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertEqual(completed.stdout.strip(), "False")
+
+    def test_count_cli_outputs_json(self):
+        command = [
+            sys.executable,
+            "-m",
+            "groupy.cli",
+            "count",
+            "--smiles",
+            "C1CCCC1",
+        ]
+
+        completed = subprocess.run(
+            command,
+            text=True,
+            capture_output=True,
+            timeout=20,
+            check=False,
+        )
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertEqual(json.loads(completed.stdout), {"f_168": 5, "smiles": "C1CCCC1"})
+
+    def test_count_cli_writes_csv(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_path = Path(tmpdir) / "count.csv"
+            command = [
+                sys.executable,
+                "-m",
+                "groupy.cli",
+                "count",
+                "--smiles",
+                "C1CCCC1",
+                "--output",
+                str(output_path),
+            ]
+
+            completed = subprocess.run(
+                command,
+                text=True,
+                capture_output=True,
+                timeout=20,
+                check=False,
+            )
+
+            self.assertEqual(completed.returncode, 0, completed.stderr)
+            result = pd.read_csv(output_path)
+            self.assertEqual(result.to_dict(orient="records"), [{"f_168": 5, "smiles": "C1CCCC1"}])
+
     @unittest.skipUnless(importlib.util.find_spec("openbabel"), "OpenBabel is required by the legacy interactive CLI")
     def test_legacy_cli_can_start_and_exit(self):
         command = [
             sys.executable,
-            "-c",
-            "from groupy.groupy_main import main; main()",
+            "-m",
+            "groupy.cli",
+            "interactive",
         ]
 
         completed = subprocess.run(
