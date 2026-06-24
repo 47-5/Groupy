@@ -12,7 +12,6 @@ authors = [
     { name = "Ruichen Liu", email = "1197748182@qq.com" },
 ]
 dependencies = [
-    "ase",
     "joblib",
     "numpy",
     "openpyxl",
@@ -22,6 +21,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+convert = []
+viewer = [
+    "ase",
+]
 dev = [
     "build",
     "pytest",

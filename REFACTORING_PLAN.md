@@ -127,11 +127,11 @@ Current file handling status:
 - [x] Keep core counting and property calculation independent from OpenBabel.
 - [x] Lazy-load OpenBabel only inside conversion functions that need it.
 - [x] Lazy-load visualization dependencies only inside viewer functions that need them.
-- [ ] Consider optional dependency groups:
+- [x] Consider optional dependency groups:
   - `.[convert]`
   - `.[viewer]`
   - `.[dev]`
-- [ ] Document that OpenBabel should usually be installed from conda-forge.
+- [x] Document that OpenBabel should usually be installed from conda-forge.
 
 Current dependency boundary status:
 
@@ -140,6 +140,10 @@ Current dependency boundary status:
 - Missing OpenBabel now raises an install hint for the relevant conversion feature.
 - `groupy.gp_viewer` can be imported without importing ASE.
 - ASE is loaded through viewer helpers only when molecular visualization needs it.
+- Core installation no longer depends on ASE or OpenBabel.
+- `.[viewer]` installs ASE for molecular visualization workflows.
+- `.[convert]` is intentionally empty because OpenBabel should usually be installed from conda-forge.
+- `.[dev]` installs build and test tooling.
 
 ## Phase 7: Data Loading And Performance
 
@@ -160,10 +164,10 @@ Current parallel API status:
 ## Phase 8: Documentation And CI
 
 - [ ] Update README with:
-  - editable install
-  - conda/OpenBabel note
-  - library API examples
-  - CLI examples
+  - [x] editable install
+  - [x] conda/OpenBabel note
+  - [ ] library API examples
+  - [x] CLI examples
 - [ ] Add a build check:
   - `python -m build`
 - [ ] Add GitHub Actions for:
@@ -199,10 +203,8 @@ Current parallel API status:
 
 ## Near-Term Next Step
 
-Start with Phase 1 and Phase 2:
+Continue with Phase 7:
 
-1. Remove generated artifacts from Git tracking.
-2. Add the first `pytest` smoke tests.
-3. Run editable install, compile, and tests after each small change.
-
-After Phase 2, prioritize Phase 3 API/CLI separation because the future GUI should call those same stable APIs.
+1. Cache `Loader` results so bundled Excel files are not repeatedly parsed.
+2. Add regression coverage around the cache behavior.
+3. Keep old public loader behavior unchanged while improving performance.

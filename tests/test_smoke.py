@@ -29,6 +29,23 @@ class LoaderSmokeTests(unittest.TestCase):
         self.assertTrue(all(group_orders))
 
 
+class PackagingSmokeTests(unittest.TestCase):
+    @unittest.skipUnless(importlib.util.find_spec("tomllib"), "tomllib is available on Python 3.11+")
+    def test_optional_dependency_groups_keep_viewer_out_of_core(self):
+        import tomllib
+
+        pyproject_path = Path(__file__).resolve().parents[1] / "pyproject.toml"
+        project = tomllib.loads(pyproject_path.read_text(encoding="utf-8"))["project"]
+
+        dependencies = project["dependencies"]
+        optional_dependencies = project["optional-dependencies"]
+
+        self.assertNotIn("ase", dependencies)
+        self.assertEqual(optional_dependencies["viewer"], ["ase"])
+        self.assertEqual(optional_dependencies["convert"], [])
+        self.assertIn("pytest", optional_dependencies["dev"])
+
+
 class CoreChemistrySmokeTests(unittest.TestCase):
     def test_counter_counts_cyclopentane(self):
         result = Counter().count_a_mol("C1CCCC1", clear_mode=True, add_smiles=True)

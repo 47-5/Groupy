@@ -16,7 +16,13 @@ Install for development:
 
 `python -m pip install -e .`
 
-`conda install -c conda-forge openbabel`(**Do not** use `pip install openbabel` )
+Install visualization support when needed:
+
+`python -m pip install -e ".[viewer]"`
+
+Install conversion and Gaussian input generation support when needed:
+
+`conda install -c conda-forge openbabel` (**Do not** use `pip install openbabel`.)
 
 Then one can enter `Groupy` in terminal to start Groupy.
 OpenBabel is only required for conversion and Gaussian input generation workflows.
