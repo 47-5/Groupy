@@ -378,6 +378,43 @@ class GeneratorSmokeTests(unittest.TestCase):
         self.assertEqual(calls[0][1], {"n_jobs": 1})
 
 
+class ViewerSmokeTests(unittest.TestCase):
+    def test_viewer_module_does_not_import_ase_at_import_time(self):
+        command = [
+            sys.executable,
+            "-c",
+            "import sys; import groupy.gp_viewer; print('ase' in sys.modules)",
+        ]
+
+        completed = subprocess.run(
+            command,
+            text=True,
+            capture_output=True,
+            timeout=20,
+            check=False,
+        )
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertEqual(completed.stdout.strip(), "False")
+
+    def test_lazy_ase_import_reports_install_hint_when_missing(self):
+        from groupy.gp_viewer import _load_ase_read
+
+        original_import = builtins.__import__
+
+        def block_ase(name, globals=None, locals=None, fromlist=(), level=0):
+            if name == "ase" or name.startswith("ase."):
+                raise ImportError("blocked for test")
+            return original_import(name, globals, locals, fromlist, level)
+
+        builtins.__import__ = block_ase
+        try:
+            with self.assertRaisesRegex(ImportError, "conda install -c conda-forge ase"):
+                _load_ase_read()
+        finally:
+            builtins.__import__ = original_import
+
+
 class CliSmokeTests(unittest.TestCase):
     def test_cli_import_does_not_load_openbabel_conversion_stack(self):
         command = [

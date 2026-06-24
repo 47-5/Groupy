@@ -1,10 +1,37 @@
-import ase
-from ase.visualize import view
-from ase.io import read
 import os
 from pprint import pprint
 
 from groupy.gp_convertor import Convertor
+
+
+_ASE_INSTALL_HINT = (
+    "ASE is required for molecular visualization. "
+    "Install it with `pip install ase` or `conda install -c conda-forge ase`."
+)
+
+
+def _load_ase_read():
+    try:
+        from ase.io import read
+    except ImportError as exc:
+        raise ImportError(_ASE_INSTALL_HINT) from exc
+    return read
+
+
+def _load_ase_view():
+    try:
+        from ase.visualize import view
+    except ImportError as exc:
+        raise ImportError(_ASE_INSTALL_HINT) from exc
+    return view
+
+
+def _load_ase_formats():
+    try:
+        from ase.io.formats import ioformats
+    except ImportError as exc:
+        raise ImportError(_ASE_INSTALL_HINT) from exc
+    return ioformats
 
 
 class Viewer:
@@ -23,6 +50,8 @@ class Viewer:
         :param mol_type: str.
         :return: None.
         """
+        read = _load_ase_read()
+        view = _load_ase_view()
         if isinstance(mol, str):
             if mol_type in ['smi', 'smiles', 'SMILES']:
                 convertor = Convertor()
@@ -45,7 +74,7 @@ class Viewer:
         print all supported file formats.
         :return: None.
         """
-        ase_format = ase.io.formats.ioformats
+        ase_format = _load_ase_formats()
         openbabel_format = {'abinit': 'ABINIT Output Format', 'acesout': 'ACES output format', 'acr': 'ACR format',
         'adfband': 'ADF Band output format', 'adfdftb': 'ADF DFTB output format', 'adfout': 'ADF output format',
         'alc': 'Alchemy format', 'aoforce': 'Turbomole AOFORCE output format',

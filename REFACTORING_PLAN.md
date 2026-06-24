@@ -126,7 +126,7 @@ Current file handling status:
 
 - [x] Keep core counting and property calculation independent from OpenBabel.
 - [x] Lazy-load OpenBabel only inside conversion functions that need it.
-- [ ] Lazy-load visualization dependencies only inside viewer functions that need them.
+- [x] Lazy-load visualization dependencies only inside viewer functions that need them.
 - [ ] Consider optional dependency groups:
   - `.[convert]`
   - `.[viewer]`
@@ -138,6 +138,8 @@ Current dependency boundary status:
 - `groupy.gp_convertor` and `groupy.gp_generator` can be imported without importing OpenBabel.
 - OpenBabel is loaded through `groupy.gp_convertor._load_pybel()` only when a conversion feature needs Pybel.
 - Missing OpenBabel now raises an install hint for the relevant conversion feature.
+- `groupy.gp_viewer` can be imported without importing ASE.
+- ASE is loaded through viewer helpers only when molecular visualization needs it.
 
 ## Phase 7: Data Loading And Performance
 

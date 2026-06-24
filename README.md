@@ -20,6 +20,7 @@ Install for development:
 
 Then one can enter `Groupy` in terminal to start Groupy.
 OpenBabel is only required for conversion and Gaussian input generation workflows.
+ASE is only required for molecular visualization workflows.
 
 For non-interactive use, one can run commands such as:
 
