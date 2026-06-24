@@ -9,11 +9,16 @@ import random
 from groupy.chem import ensure_mol
 from groupy.exceptions import ConversionError, InvalidSmilesError
 from groupy.gp_convertor import Convertor
-from groupy.gp_tool import Tool
-from groupy.io import write_text_lines
+from groupy.io import load_smiles_file, write_text_lines
 
 logger = logging.getLogger(__name__)
 GENERATION_EXCEPTIONS = (ConversionError, InvalidSmilesError, TypeError, OSError, RuntimeError, ValueError)
+
+
+def _report_progress(message, verbose):
+    logger.info(message)
+    if verbose:
+        print(message)
 
 
 class Generator:
@@ -140,6 +145,7 @@ class Generator:
                          add_other_tasks=False, other_tasks: list = None,
                          index_start=0,
                          fail_file_path=None, succeed_file_path=None,
+                         verbose=True,
                          ):
         """
         Generating some gjf files based on a file in which saved some SMILES.
@@ -156,24 +162,32 @@ class Generator:
                     '#p m062x/def2tzvp scrf=solvent=water geom=check',]. Note that this parameter will only be used if add_other_tasks=True.
         :param fail_file_path: optional path for writing SMILES strings that failed to generate gjf files.
         :param succeed_file_path: optional path for writing SMILES strings that successfully generated gjf files.
+        :param verbose: if True, print progress messages and progress bars. Set False for programmatic or GUI use.
         :return: None
         """
-        smiles_iterator = Tool.load_smiles_iterator(smiles_file_path=smiles_file_path)
+        _report_progress('reading input file...', verbose)
+        smiles_iterator = load_smiles_file(smiles_file_path)
         mol_number = len(smiles_iterator)
         zfill_number = len(str(mol_number)) + 5
-        print('reading completed，A total of {} molecules detected, start calculating properties...'.format(mol_number))
+        _report_progress(
+            'reading completed，A total of {} molecules detected, start calculating properties...'.format(mol_number),
+            verbose,
+        )
 
         # make gjf_root_path
         if os.path.exists(gjf_root_path):
-            print('gjf_root_path "{}" has been detected!'.format(gjf_root_path))
+            _report_progress('gjf_root_path "{}" has been detected!'.format(gjf_root_path), verbose)
         else:
-            print('gjf_root_path "{}" has not been detected, I will create it for you'.format(gjf_root_path))
+            _report_progress(
+                'gjf_root_path "{}" has not been detected, I will create it for you'.format(gjf_root_path),
+                verbose,
+            )
             os.makedirs(gjf_root_path)
         # end
 
         succeed = []
         fail = []
-        for (index, smi) in tqdm(enumerate(smiles_iterator)):
+        for (index, smi) in tqdm(enumerate(smiles_iterator), disable=not verbose):
             smi = smi.strip()
             index += index_start
             chk_path = '{}.chk'.format(str(index).zfill(zfill_number))
@@ -194,17 +208,19 @@ class Generator:
         if succeed_file_path is not None:
             write_text_lines(succeed, succeed_file_path)
         if len(fail) == 0:
-            print('done! all .gjf files has been saved in {}'.format(gjf_root_path))
+            _report_progress('done! all .gjf files has been saved in {}'.format(gjf_root_path), verbose)
         else:
-            print('Warning! The following SMILES fail to generate .gjf, please check...sorry(OTZ)')
-            print(fail)
+            logger.warning("Failed to generate gjf files for SMILES: %s", fail)
+            if verbose:
+                print('Warning! The following SMILES fail to generate .gjf, please check...sorry(OTZ)')
+                print(fail)
         return None
 
     def batch_smi_to_gjf_mpi(self, smiles_file_path, gjf_root_path=None,
                              nproc='12', mem='12GB',
                              gaussian_keywords=None, charge_and_multiplicity=None,
                              add_other_tasks=False, other_tasks: list = None,
-                             n_jobs=1, batch_size='auto'
+                             n_jobs=1, batch_size='auto', verbose=True
                          ):
         """
         Generating some gjf files based on a file in which saved some SMILES with MPI acceleration.
@@ -221,18 +237,26 @@ class Generator:
                     '#p m062x/def2tzvp scrf=solvent=water geom=check',]. Note that this parameter will only be used if add_other_tasks=True.
         :param n_jobs: int. number of CPU cores you want to use when generating gjf file.
         :param batch_size: int or str. Number of tasks per CPU core you want to use when generating gjf file. Default='auto'.
+        :param verbose: if True, print progress messages. Set False for programmatic or GUI use.
         :return: None
         """
-        smiles_iterator = Tool.load_smiles_iterator(smiles_file_path=smiles_file_path)
+        _report_progress('reading input file...', verbose)
+        smiles_iterator = load_smiles_file(smiles_file_path)
         mol_number = len(smiles_iterator)
         zfill_number = len(str(mol_number)) + 5
-        print('reading completed，A total of {} molecules detected, start calculating properties...'.format(mol_number))
+        _report_progress(
+            'reading completed，A total of {} molecules detected, start calculating properties...'.format(mol_number),
+            verbose,
+        )
 
         # make gjf_root_path
         if os.path.exists(gjf_root_path):
-            print('gjf_root_path "{}" has been detected!'.format(gjf_root_path))
+            _report_progress('gjf_root_path "{}" has been detected!'.format(gjf_root_path), verbose)
         else:
-            print('gjf_root_path "{}" has not been detected, I will create it for you'.format(gjf_root_path))
+            _report_progress(
+                'gjf_root_path "{}" has not been detected, I will create it for you'.format(gjf_root_path),
+                verbose,
+            )
             os.makedirs(gjf_root_path)
 
         # task

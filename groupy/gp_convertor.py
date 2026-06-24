@@ -8,11 +8,16 @@ from pprint import pprint
 
 from groupy.chem import ensure_mol
 from groupy.exceptions import InvalidSmilesError
-from groupy.gp_tool import Tool
-from groupy.io import write_text_lines
+from groupy.io import load_smiles_file, write_text_lines
 
 logger = logging.getLogger(__name__)
 CONVERSION_EXCEPTIONS = (OSError, RuntimeError, StopIteration, ValueError)
+
+
+def _report_progress(message, verbose):
+    logger.info(message)
+    if verbose:
+        print(message)
 
 
 def _load_pybel():
@@ -82,30 +87,39 @@ class Convertor:
                         file.write(i.split()[2] + '\n')
         return True
 
-    def batch_smi_to_xyz(self, smiles_file_path, xyz_root_path, fail_file_path=None, succeed_file_path=None):
+    def batch_smi_to_xyz(self, smiles_file_path, xyz_root_path,
+                         fail_file_path=None, succeed_file_path=None, verbose=True):
         """
         Converting a batch of SMILES to xyz files.
         :param smiles_file_path: str. Path of the file in which saved SMILES.
         :param xyz_root_path: str. The folder path where all generated xyz files are saved.
         :param fail_file_path: optional path for writing SMILES strings that failed to generate xyz files.
         :param succeed_file_path: optional path for writing SMILES strings that successfully generated xyz files.
+        :param verbose: if True, print progress messages and progress bars. Set False for programmatic or GUI use.
         :return: None.
         """
-        smiles_iterator = Tool.load_smiles_iterator(smiles_file_path=smiles_file_path)
+        _report_progress('reading input file...', verbose)
+        smiles_iterator = load_smiles_file(smiles_file_path)
         mol_number = len(smiles_iterator)
         zfill_number = len(str(mol_number)) + 3
-        print('reading completed，A total of {} molecules detected, start making xyz files...'.format(mol_number))
+        _report_progress(
+            'reading completed，A total of {} molecules detected, start making xyz files...'.format(mol_number),
+            verbose,
+        )
         # make xyz_root_path
         if os.path.exists(xyz_root_path):
-            print('xyz_root_path "{}" has been detected!'.format(xyz_root_path))
+            _report_progress('xyz_root_path "{}" has been detected!'.format(xyz_root_path), verbose)
         else:
-            print('xyz_root_path "{}" has not been detected, I will create it for you'.format(xyz_root_path))
+            _report_progress(
+                'xyz_root_path "{}" has not been detected, I will create it for you'.format(xyz_root_path),
+                verbose,
+            )
             os.makedirs(xyz_root_path)
         # end
 
         succeed = []
         fail = []
-        for (index, smi) in tqdm(enumerate(smiles_iterator)):
+        for (index, smi) in tqdm(enumerate(smiles_iterator), disable=not verbose):
             smi = smi.strip()
             out_name = os.path.join(xyz_root_path, '{}.xyz'.format(str(index).zfill(zfill_number)))
             generate_success_flag = self.smi_to_xyz(smi=smi, xyz_path=out_name)
@@ -121,36 +135,47 @@ class Convertor:
             write_text_lines(succeed, succeed_file_path)
 
         if len(fail) == 0:
-            print('done! all .xyz files has been saved in {}'.format(xyz_root_path))
+            _report_progress('done! all .xyz files has been saved in {}'.format(xyz_root_path), verbose)
         else:
-            print('Warning! The following SMILES fail to generate .xyz, please check...sorry(OTZ)')
-            print(fail)
+            logger.warning("Failed to generate xyz files for SMILES: %s", fail)
+            if verbose:
+                print('Warning! The following SMILES fail to generate .xyz, please check...sorry(OTZ)')
+                print(fail)
         return None
 
-    def batch_smi_to_xyz_mpi(self, smiles_file_path, xyz_root_path, n_jobs=1, batch_size='auto'):
+    def batch_smi_to_xyz_mpi(self, smiles_file_path, xyz_root_path,
+                             n_jobs=1, batch_size='auto', verbose=True):
         """
         Converting a batch of SMILES to xyz files with MPI acceleration.
         :param smiles_file_path: str. Path of the file in which saved SMILES.
         :param xyz_root_path: str. The folder path where all generated xyz files are saved.
         :param n_jobs: int. number of CPU cores you want to use when generating xyz file.
         :param batch_size: int or str. Number of tasks per CPU core you want to use when generating xyz file. Default='auto'.
+        :param verbose: if True, print progress messages. Set False for programmatic or GUI use.
         :return: None.
         """
-        smiles_iterator = Tool.load_smiles_iterator(smiles_file_path=smiles_file_path)
+        _report_progress('reading input file...', verbose)
+        smiles_iterator = load_smiles_file(smiles_file_path)
         mol_number = len(smiles_iterator)
         zfill_number = len(str(mol_number)) + 3
-        print('reading completed，A total of {} molecules detected, start making xyz files...'.format(mol_number))
+        _report_progress(
+            'reading completed，A total of {} molecules detected, start making xyz files...'.format(mol_number),
+            verbose,
+        )
         # make xyz_root_path
         if os.path.exists(xyz_root_path):
-            print('xyz_root_path "{}" has been detected!'.format(xyz_root_path))
+            _report_progress('xyz_root_path "{}" has been detected!'.format(xyz_root_path), verbose)
         else:
-            print('xyz_root_path "{}" has not been detected, I will create it for you'.format(xyz_root_path))
+            _report_progress(
+                'xyz_root_path "{}" has not been detected, I will create it for you'.format(xyz_root_path),
+                verbose,
+            )
             os.makedirs(xyz_root_path)
         # end
 
         task = [delayed(self.smi_to_xyz)(smi=smi, xyz_path=os.path.join(xyz_root_path, '{}.xyz'.format(str(index).zfill(zfill_number)))) for (index, smi) in enumerate(smiles_iterator)]
         result = Parallel(n_jobs=n_jobs, batch_size=batch_size)(task)
-        print('done! all .xyz files has been saved in {}'.format(xyz_root_path))
+        _report_progress('done! all .xyz files has been saved in {}'.format(xyz_root_path), verbose)
         return result
 
     def batch_smi_to_xyz_parallel(self, *args, **kwargs):
@@ -186,22 +211,26 @@ class Convertor:
             logger.warning("Failed to convert %s from %s to %s: %s", in_path, in_format, out_format, exc)
             return None
 
-    def batch_convert_file_type(self, in_format, in_root_path, out_format, out_root_path=None):
+    def batch_convert_file_type(self, in_format, in_root_path, out_format, out_root_path=None, verbose=True):
         """
         Converting format of a batch of files.
         :param in_format: str. Init format.
         :param in_root_path: str. Path of the folder in which save files that you want to change format.
         :param out_format: str. Target format.
         :param out_root_path: str. Path of the folder where all new files are saved. If set to None, out_root_path will be same as in_root_path.
+        :param verbose: if True, print progress messages and progress bars. Set False for programmatic or GUI use.
         """
         if out_root_path is None:
             out_root_path = in_root_path
         else:
             # make out_root_path
             if os.path.exists(out_root_path):
-                print('out_root_path "{}" has been detected!'.format(out_root_path))
+                _report_progress('out_root_path "{}" has been detected!'.format(out_root_path), verbose)
             else:
-                print('out_root_path "{}" has not been detected, I will create it for you'.format(out_root_path))
+                _report_progress(
+                    'out_root_path "{}" has not been detected, I will create it for you'.format(out_root_path),
+                    verbose,
+                )
                 os.makedirs(out_root_path)
             # end
         in_file_names = os.listdir(in_root_path)
@@ -213,7 +242,7 @@ class Convertor:
         out_file_path = [os.path.join(out_root_path, i) for i in out_file_names]
 
         error_in_file_path = []
-        for index in tqdm(range(len(in_file_path))):
+        for index in tqdm(range(len(in_file_path)), disable=not verbose):
             try:
                 self.convert_file_type(in_format=in_format, in_path=in_file_path[index],
                                        out_format=out_format, out_path=out_file_path[index])
@@ -224,12 +253,15 @@ class Convertor:
 
         # When there is something wrong, print some warning
         if len(error_in_file_path) > 0:
-            print('Warning!Warning!Warning!')
-            for i in error_in_file_path:
-                print('There may something wrong in {}, please check it carefully!'.format(i))
+            logger.warning("Failed to convert files: %s", error_in_file_path)
+            if verbose:
+                print('Warning!Warning!Warning!')
+                for i in error_in_file_path:
+                    print('There may something wrong in {}, please check it carefully!'.format(i))
         return None
 
-    def batch_convert_file_type_mpi(self, in_format, in_root_path, out_format, out_root_path=None, n_jobs=1, batch_size='auto'):
+    def batch_convert_file_type_mpi(self, in_format, in_root_path, out_format,
+                                    out_root_path=None, n_jobs=1, batch_size='auto', verbose=True):
         """
         Converting format of a batch of files with MPI acceleration.
         :param in_format: str. Init format.
@@ -238,15 +270,19 @@ class Convertor:
         :param out_root_path: str. Path of the folder where all new files are saved. If set to None, out_root_path will be same as in_root_path.
         :param n_jobs: int. number of CPU cores you want to use when converting file format.
         :param batch_size: int or str. Number of tasks per CPU core you want to use when converting file format. Default='auto'.
+        :param verbose: if True, print progress messages. Set False for programmatic or GUI use.
         """
         if out_root_path is None:
             out_root_path = in_root_path
         else:
             # make out_root_path
             if os.path.exists(out_root_path):
-                print('out_root_path "{}" has been detected!'.format(out_root_path))
+                _report_progress('out_root_path "{}" has been detected!'.format(out_root_path), verbose)
             else:
-                print('out_root_path "{}" has not been detected, I will create it for you'.format(out_root_path))
+                _report_progress(
+                    'out_root_path "{}" has not been detected, I will create it for you'.format(out_root_path),
+                    verbose,
+                )
                 os.makedirs(out_root_path)
             # end
         in_file_names = os.listdir(in_root_path)
@@ -288,22 +324,26 @@ class Convertor:
             logger.warning("Failed to read SMILES from %s as %s: %s", file_path, format, exc)
             return 'There may something wrong in {}, please check it carefully!'.format(file_path)
 
-    def batch_file_to_smi(self, in_format, in_root_path, out_root_path=None):
+    def batch_file_to_smi(self, in_format, in_root_path, out_root_path=None, verbose=True):
         """
         Converting a batch of files into SMILES.
         :param in_format: str. Format of the file.
         :param in_root_path: str. Path of the folder in which save files that you want to convert to SMILES.
         :param out_root_path: str. Path of the folder in which save the file that save SMILES of molecules.
                               If set to None, out_root_path will be same as in_root_path.
+        :param verbose: if True, print progress messages and progress bars. Set False for programmatic or GUI use.
         """
         if out_root_path is None:
             out_root_path = in_root_path
         else:
             # make out_root_path
             if os.path.exists(out_root_path):
-                print('out_root_path "{}" has been detected!'.format(out_root_path))
+                _report_progress('out_root_path "{}" has been detected!'.format(out_root_path), verbose)
             else:
-                print('out_root_path "{}" has not been detected, I will create it for you'.format(out_root_path))
+                _report_progress(
+                    'out_root_path "{}" has not been detected, I will create it for you'.format(out_root_path),
+                    verbose,
+                )
                 os.makedirs(out_root_path)
             # end
         in_file_names = os.listdir(in_root_path)
@@ -311,7 +351,7 @@ class Convertor:
         in_file_path = [os.path.join(in_root_path, i) for i in in_file_names]
         error_in_file_path = []
         smi_list = []
-        for index in tqdm(range(len(in_file_path))):
+        for index in tqdm(range(len(in_file_path)), disable=not verbose):
             try:
                 smi_list.append(self.file_to_smi(format=in_format, file_path=in_file_path[index]))
             except CONVERSION_EXCEPTIONS as exc:
@@ -321,16 +361,19 @@ class Convertor:
 
         # When there is something wrong, print some warning
         if len(error_in_file_path) > 0:
-            print('Warning!Warning!Warning!')
-            for i in error_in_file_path:
-                print('There may something wrong in {}, please check it carefully!'.format(i))
+            logger.warning("Failed to read SMILES from files: %s", error_in_file_path)
+            if verbose:
+                print('Warning!Warning!Warning!')
+                for i in error_in_file_path:
+                    print('There may something wrong in {}, please check it carefully!'.format(i))
 
         with open(os.path.join(out_root_path, 'SMILES.txt'), 'w') as f:
             for i in smi_list:
                 f.write(i + '\n')
         return smi_list
 
-    def batch_file_to_smi_mpi(self, in_format, in_root_path, out_root_path=None, n_jobs=1, batch_size='auto'):
+    def batch_file_to_smi_mpi(self, in_format, in_root_path, out_root_path=None,
+                              n_jobs=1, batch_size='auto', verbose=True):
         """
         Converting a batch of files into SMILES with MPI acceleration.
         :param in_format: str. Format of the file.
@@ -339,15 +382,19 @@ class Convertor:
                               If set to None, out_root_path will be same as in_root_path.
         :param n_jobs: int. number of CPU cores you want to use when converting file to SMILES.
         :param batch_size: int or str. Number of tasks per CPU core you want to use when converting file to SMILES. Default='auto'.
+        :param verbose: if True, print progress messages. Set False for programmatic or GUI use.
         """
         if out_root_path is None:
             out_root_path = in_root_path
         else:
             # make out_root_path
             if os.path.exists(out_root_path):
-                print('out_root_path "{}" has been detected!'.format(out_root_path))
+                _report_progress('out_root_path "{}" has been detected!'.format(out_root_path), verbose)
             else:
-                print('out_root_path "{}" has not been detected, I will create it for you'.format(out_root_path))
+                _report_progress(
+                    'out_root_path "{}" has not been detected, I will create it for you'.format(out_root_path),
+                    verbose,
+                )
                 os.makedirs(out_root_path)
             # end
         in_file_names = os.listdir(in_root_path)

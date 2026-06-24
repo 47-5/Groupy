@@ -423,6 +423,92 @@ class ConvertorSmokeTests(unittest.TestCase):
             self.assertEqual(fail_path.read_text(encoding="utf-8"), "invalid\n")
             self.assertEqual(succeed_path.read_text(encoding="utf-8"), "C1CCCC1\n")
 
+    def test_batch_smi_to_xyz_can_run_quietly_for_gui_use(self):
+        from groupy.gp_convertor import Convertor
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            input_path = tmp_path / "smiles.txt"
+            xyz_root = tmp_path / "xyz"
+            input_path.write_text("C1CCCC1\n", encoding="utf-8")
+
+            convertor = Convertor()
+
+            def fake_smi_to_xyz(smi, xyz_path=None):
+                Path(xyz_path).write_text("fake xyz\n", encoding="utf-8")
+                return True
+
+            convertor.smi_to_xyz = fake_smi_to_xyz
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+
+            with redirect_stdout(stdout), redirect_stderr(stderr):
+                convertor.batch_smi_to_xyz(str(input_path), str(xyz_root), verbose=False)
+
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertEqual(stderr.getvalue(), "")
+            self.assertTrue((xyz_root / "0000.xyz").exists())
+
+    def test_batch_convert_file_type_can_run_quietly_for_gui_use(self):
+        from groupy.gp_convertor import Convertor
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            input_root = tmp_path / "input"
+            output_root = tmp_path / "output"
+            input_root.mkdir()
+            (input_root / "molecule.xyz").write_text("fake xyz\n", encoding="utf-8")
+
+            convertor = Convertor()
+
+            def fake_convert_file_type(in_format, in_path, out_format, out_path=None):
+                Path(out_path).write_text(f"fake {out_format}\n", encoding="utf-8")
+
+            convertor.convert_file_type = fake_convert_file_type
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+
+            with redirect_stdout(stdout), redirect_stderr(stderr):
+                convertor.batch_convert_file_type(
+                    "xyz",
+                    str(input_root),
+                    "mol",
+                    str(output_root),
+                    verbose=False,
+                )
+
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertEqual(stderr.getvalue(), "")
+            self.assertTrue((output_root / "molecule.mol").exists())
+
+    def test_batch_file_to_smi_can_run_quietly_for_gui_use(self):
+        from groupy.gp_convertor import Convertor
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            input_root = tmp_path / "input"
+            output_root = tmp_path / "output"
+            input_root.mkdir()
+            (input_root / "molecule.mol").write_text("fake mol\n", encoding="utf-8")
+
+            convertor = Convertor()
+            convertor.file_to_smi = lambda file_path, format=None: "C1CCCC1"
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+
+            with redirect_stdout(stdout), redirect_stderr(stderr):
+                result = convertor.batch_file_to_smi(
+                    "mol",
+                    str(input_root),
+                    str(output_root),
+                    verbose=False,
+                )
+
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertEqual(stderr.getvalue(), "")
+            self.assertEqual(result, ["C1CCCC1"])
+            self.assertEqual((output_root / "SMILES.txt").read_text(encoding="utf-8"), "C1CCCC1\n")
+
     @unittest.skipUnless(importlib.util.find_spec("openbabel"), "OpenBabel is required by gp_convertor")
     def test_convertor_parallel_aliases_call_legacy_methods(self):
         from groupy.gp_convertor import Convertor
@@ -558,6 +644,32 @@ class GeneratorSmokeTests(unittest.TestCase):
 
             self.assertEqual(fail_path.read_text(encoding="utf-8"), "invalid\n")
             self.assertEqual(succeed_path.read_text(encoding="utf-8"), "C1CCCC1\n")
+
+    def test_batch_smi_to_gjf_can_run_quietly_for_gui_use(self):
+        from groupy.gp_generator import Generator
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            input_path = tmp_path / "smiles.txt"
+            gjf_root = tmp_path / "gjf"
+            input_path.write_text("C1CCCC1\n", encoding="utf-8")
+
+            generator = Generator()
+
+            def fake_smi_to_gjf(smi, **kwargs):
+                Path(kwargs["gjf_path"]).write_text("fake gjf\n", encoding="utf-8")
+                return True
+
+            generator.smi_to_gjf = fake_smi_to_gjf
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+
+            with redirect_stdout(stdout), redirect_stderr(stderr):
+                generator.batch_smi_to_gjf(str(input_path), str(gjf_root), verbose=False)
+
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertEqual(stderr.getvalue(), "")
+            self.assertTrue((gjf_root / "000000.gjf").exists())
 
     @unittest.skipUnless(importlib.util.find_spec("openbabel"), "OpenBabel is required by gp_generator")
     def test_generator_parallel_alias_calls_legacy_method(self):

@@ -124,6 +124,8 @@ Current file handling status:
 - [ ] Move user-facing `print()` calls toward the CLI layer.
   - [x] Core `Calculator.calculate_mols*()` batch methods now support `verbose=False`.
   - [x] Core `Counter.count_mols*()` batch methods now support `verbose=False`.
+  - [x] Conversion `Convertor.batch_*()` methods now support `verbose=False`.
+  - [x] Gaussian input `Generator.batch_smi_to_gjf*()` methods now support `verbose=False`.
 - [ ] Use `logging` in library code.
   - [x] Use module loggers for invalid SMILES in core calculator/counter paths.
   - [x] Use module loggers for conversion and Gaussian input generation failures.
@@ -143,6 +145,7 @@ Current exception/error reporting status:
 - Conversion and Gaussian generation no longer hide missing OpenBabel install errors.
 - `Generator.smi_to_gjf()` cleans temporary xyz files in a `finally` block.
 - Core batch calculation/counting methods keep legacy progress output by default, but `verbose=False` suppresses `print()` and `tqdm` output for GUI/programmatic use.
+- Conversion and Gaussian generation batch methods also keep legacy progress output by default, with `verbose=False` available for GUI/programmatic use.
 
 ## Phase 6: Dependency Boundaries And Lazy Imports
 
@@ -235,6 +238,6 @@ Current parallel API status:
 
 Continue with Phase 7:
 
-1. Continue replacing broad exception handling in conversion/generation and legacy interactive paths.
-2. Move user-facing `print()` calls out of conversion/generation batch methods where practical.
-3. After the core API is stable enough, begin the minimal PySide6 GUI shell.
+1. Continue replacing broad exception handling and direct prints in the legacy interactive path.
+2. Add README examples for `verbose=False` programmatic batch use.
+3. Begin the minimal PySide6 GUI shell once PySide6 availability is confirmed.
