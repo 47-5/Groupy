@@ -12,13 +12,13 @@ One may create an environment using Anaconda:
 
 `conda activate groupy_env`
 
-Install:
+Install for development:
 
-`pip install .\Groupy\dist\groupy-3.0.0.tar.gz`
+`python -m pip install -e .`
 
 `conda install -c conda-forge openbabel`(**Do not** use `pip install openbabel` )
 
-Then one can enter `Groupy` in terminal to start the Groupy.
+Then one can enter `Groupy` in terminal to start Groupy.
 
 ### Manual and Documention
 The user manual is in the manual folder, and the API documentation can be found in the doc folder.

@@ -1,7 +1,13 @@
-from . import gp_loader
-from . import gp_tool
-from . import gp_viewer
-from . import gp_convertor
-from . import gp_calculator
-from . import gp_counter
-from . import gp_generator
+"""Groupy package namespace."""
+
+__version__ = "3.0.0"
+
+__all__ = [
+    "gp_loader",
+    "gp_tool",
+    "gp_viewer",
+    "gp_convertor",
+    "gp_calculator",
+    "gp_counter",
+    "gp_generator",
+]

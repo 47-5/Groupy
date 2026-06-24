@@ -1,7 +1,0 @@
-rdkit
-pandas
-numpy
-tqdm
-ase
-joblib
-openpyxl

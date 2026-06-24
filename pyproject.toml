@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "Groupy"
+version = "3.0.0"
+description = "Groupy -- A Useful Tool for Molecular Analysis"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    { name = "Ruichen Liu", email = "1197748182@qq.com" },
+]
+dependencies = [
+    "ase",
+    "joblib",
+    "numpy",
+    "openpyxl",
+    "pandas",
+    "rdkit",
+    "tqdm",
+]
+
+[project.optional-dependencies]
+dev = [
+    "build",
+    "pytest",
+]
+
+[project.scripts]
+Groupy = "groupy.groupy_main:main"
+
+[project.urls]
+Homepage = "https://github.com/47-5/Groupy"
+
+[tool.setuptools.packages.find]
+include = ["groupy*"]
+
+[tool.setuptools.package-data]
+groupy = ["*.xlsx"]

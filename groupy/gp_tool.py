@@ -1,5 +1,4 @@
 import pandas as pd
-from PIL.ImageSequence import Iterator
 
 
 class Tool:
@@ -21,13 +20,14 @@ class Tool:
         """
         print('reading input file...')
         if smiles_file_path.endswith('.txt'):
-            smiles_iterator = list(open(smiles_file_path))
+            with open(smiles_file_path, encoding='utf-8') as file:
+                smiles_iterator = list(file)
         elif smiles_file_path.endswith('.xlsx'):
             smiles_iterator = pd.read_excel(smiles_file_path)['smiles']
         elif smiles_file_path.endswith('.csv'):
             smiles_iterator = pd.read_csv(smiles_file_path)['smiles']
         else:
-            raise NotImplemented('无法识别的文件类型，请以.txt/.xlsx/.csv类型的文件作为输入。')
+            raise NotImplementedError('无法识别的文件类型，请以.txt/.xlsx/.csv类型的文件作为输入。')
         smiles_iterator = [i.strip() for i in smiles_iterator]
         return smiles_iterator
 
