@@ -1,14 +1,23 @@
 import os
 from rdkit import Chem
 from rdkit.Chem import AllChem
-from openbabel import pybel
-import pandas as pd
 from tqdm import tqdm
 from joblib import Parallel, delayed
 from pprint import pprint
 
 from groupy.gp_tool import Tool
 from groupy.io import write_text_lines
+
+
+def _load_pybel():
+    try:
+        from openbabel import pybel
+    except ImportError as exc:
+        raise ImportError(
+            "OpenBabel is required for this conversion feature. "
+            "Install it with `conda install -c conda-forge openbabel`."
+        ) from exc
+    return pybel
 
 
 class Convertor:
@@ -43,6 +52,7 @@ class Convertor:
             AllChem.MMFFOptimizeMolecule(mol_with_h)
             opt = Chem.MolToMolBlock(mol_with_h)
         except ValueError:
+            pybel = _load_pybel()
             mol = pybel.readstring("smi", smi)
             mol.addh()
             if mol.make3D() is None:
@@ -167,6 +177,7 @@ class Convertor:
         :param out_path: str. Target file path. If set to None, out_path will be same as in_path except its suffix.
         """
         try:
+            pybel = _load_pybel()
             mol = pybel.readfile(in_format, in_path).__next__()
             # print('The SMILES of this system is :')
             # print(mol.write('smi'))
@@ -273,6 +284,7 @@ class Convertor:
         :return: SMILES
         """
         try:
+            pybel = _load_pybel()
             atoms = next(pybel.readfile(format=format, filename=file_path))
             smi = atoms.write(format='smi').split('\t')[0]
             # print(smi)

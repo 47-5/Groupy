@@ -124,14 +124,20 @@ Current file handling status:
 
 ## Phase 6: Dependency Boundaries And Lazy Imports
 
-- [ ] Keep core counting and property calculation independent from OpenBabel.
-- [ ] Lazy-load OpenBabel only inside conversion functions that need it.
+- [x] Keep core counting and property calculation independent from OpenBabel.
+- [x] Lazy-load OpenBabel only inside conversion functions that need it.
 - [ ] Lazy-load visualization dependencies only inside viewer functions that need them.
 - [ ] Consider optional dependency groups:
   - `.[convert]`
   - `.[viewer]`
   - `.[dev]`
 - [ ] Document that OpenBabel should usually be installed from conda-forge.
+
+Current dependency boundary status:
+
+- `groupy.gp_convertor` and `groupy.gp_generator` can be imported without importing OpenBabel.
+- OpenBabel is loaded through `groupy.gp_convertor._load_pybel()` only when a conversion feature needs Pybel.
+- Missing OpenBabel now raises an install hint for the relevant conversion feature.
 
 ## Phase 7: Data Loading And Performance
 

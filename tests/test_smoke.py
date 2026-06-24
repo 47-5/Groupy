@@ -1,4 +1,5 @@
 import importlib.util
+import builtins
 import json
 import os
 import subprocess
@@ -155,6 +156,46 @@ class SmilesFileSmokeTests(unittest.TestCase):
 
 
 class ConvertorSmokeTests(unittest.TestCase):
+    def test_conversion_modules_do_not_import_openbabel_at_import_time(self):
+        command = [
+            sys.executable,
+            "-c",
+            (
+                "import sys; "
+                "import groupy.gp_convertor; "
+                "import groupy.gp_generator; "
+                "print('openbabel' in sys.modules)"
+            ),
+        ]
+
+        completed = subprocess.run(
+            command,
+            text=True,
+            capture_output=True,
+            timeout=20,
+            check=False,
+        )
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertEqual(completed.stdout.strip(), "False")
+
+    def test_lazy_pybel_import_reports_install_hint_when_missing(self):
+        from groupy.gp_convertor import _load_pybel
+
+        original_import = builtins.__import__
+
+        def block_openbabel(name, globals=None, locals=None, fromlist=(), level=0):
+            if name == "openbabel":
+                raise ImportError("blocked for test")
+            return original_import(name, globals, locals, fromlist, level)
+
+        builtins.__import__ = block_openbabel
+        try:
+            with self.assertRaisesRegex(ImportError, "conda install -c conda-forge openbabel"):
+                _load_pybel()
+        finally:
+            builtins.__import__ = original_import
+
     @unittest.skipUnless(importlib.util.find_spec("openbabel"), "OpenBabel is required by gp_convertor")
     def test_batch_smi_to_xyz_does_not_write_logs_by_default(self):
         from groupy.gp_convertor import Convertor
