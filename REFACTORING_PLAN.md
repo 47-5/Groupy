@@ -147,10 +147,18 @@ Current dependency boundary status:
 
 ## Phase 7: Data Loading And Performance
 
-- [ ] Cache `Loader` results so Excel files are not repeatedly parsed.
+- [x] Cache `Loader` results so Excel files are not repeatedly parsed.
+- [x] Add regression coverage around cached loader reads.
 - [ ] Keep SMARTS/group-counting logic behaviorally unchanged until tests cover it better.
 - [x] Rename or alias `*_mpi` APIs to `*_parallel`, since they use `joblib`, not MPI.
 - [x] Preserve old method names during transition for backward compatibility.
+
+Current data loading status:
+
+- `Loader.load_parameters()` caches bundled Excel parameter tables per parameter type.
+- `Loader.load_group_order()` caches bundled group order tables.
+- `Loader.clear_cache()` is available for tests and advanced workflows that need to refresh cached internal data.
+- Public loader methods return independent copies so callers cannot mutate the process-wide cache by accident.
 
 Current parallel API status:
 
@@ -205,6 +213,6 @@ Current parallel API status:
 
 Continue with Phase 7:
 
-1. Cache `Loader` results so bundled Excel files are not repeatedly parsed.
-2. Add regression coverage around the cache behavior.
-3. Keep old public loader behavior unchanged while improving performance.
+1. Keep SMARTS/group-counting behavior unchanged while adding narrower tests around representative groups.
+2. Start replacing broad exception handling in batch paths with explicit errors and logging.
+3. After the core API is stable enough, begin the minimal PySide6 GUI shell.

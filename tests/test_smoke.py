@@ -18,6 +18,9 @@ from groupy.io import load_smiles_file
 
 
 class LoaderSmokeTests(unittest.TestCase):
+    def tearDown(self):
+        Loader.clear_cache()
+
     def test_loader_reads_bundled_data(self):
         loader = Loader()
 
@@ -27,6 +30,57 @@ class LoaderSmokeTests(unittest.TestCase):
         self.assertEqual(len(parameters), 425)
         self.assertEqual(group_orders[0][:3], [104, 105, 93])
         self.assertTrue(all(group_orders))
+
+    def test_loader_caches_bundled_excel_reads(self):
+        Loader.clear_cache()
+        read_calls = []
+        original_read_excel = Loader._read_excel
+
+        def counting_read_excel(data_file, **kwargs):
+            read_calls.append(kwargs["sheet_name"])
+            return original_read_excel(data_file, **kwargs)
+
+        Loader._read_excel = staticmethod(counting_read_excel)
+        try:
+            loader = Loader()
+            loader.load_parameters(parameter_type="simultaneous")
+            Loader().load_parameters(parameter_type="simultaneous")
+            loader.load_group_order()
+            Loader().load_group_order()
+        finally:
+            Loader._read_excel = staticmethod(original_read_excel)
+
+        self.assertEqual(
+            read_calls,
+            [
+                "simultaneous_first_order",
+                "simultaneous_second_order",
+                "simultaneous_third_order",
+                "simultaneous_constants",
+                "f",
+                "s",
+                "t",
+            ],
+        )
+
+    def test_loader_returns_independent_copies_from_cache(self):
+        Loader.clear_cache()
+        loader = Loader()
+
+        parameters = loader.load_parameters()
+        parameter_key = next(iter(parameters))
+        property_key = next(iter(parameters[parameter_key]))
+        original_value = parameters[parameter_key][property_key]
+        parameters[parameter_key][property_key] = "changed"
+
+        group_orders = loader.load_group_order()
+        group_orders[0].append(999999)
+
+        fresh_parameters = Loader().load_parameters()
+        fresh_group_orders = Loader().load_group_order()
+
+        self.assertEqual(fresh_parameters[parameter_key][property_key], original_value)
+        self.assertNotIn(999999, fresh_group_orders[0])
 
 
 class PackagingSmokeTests(unittest.TestCase):
