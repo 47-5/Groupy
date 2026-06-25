@@ -124,7 +124,7 @@ def sub_function_minus_2_of_main_function_5():
     batch_size = input('input batch size for task decomposition. e.g. 20, you can also enter "auto" \n')
     try:
         batch_size = int(batch_size)
-    except:
+    except ValueError:
         pass
     convertor = Convertor()
     convertor.batch_smi_to_xyz_mpi(smiles_file_path=smiles_file_path, xyz_root_path=xyz_root_path,
@@ -189,7 +189,7 @@ def sub_function_minus_4_of_main_function_5():
     batch_size = input('input batch size for task decomposition. e.g. 20, you can also enter "auto" \n')
     try:
         batch_size = int(batch_size)
-    except:
+    except ValueError:
         pass
     convertor = Convertor()
     convertor.batch_convert_file_type_mpi(in_format=in_format, in_root_path=in_root_path,
@@ -249,7 +249,7 @@ def sub_function_minus_6_of_main_function_5():
     batch_size = input('input batch size for task decomposition. e.g. 20, you can also enter "auto" \n')
     try:
         batch_size = int(batch_size)
-    except:
+    except ValueError:
         pass
     convertor = Convertor()
     smi_list = convertor.batch_file_to_smi_mpi(in_format=in_format, in_root_path=in_root_path,
@@ -429,7 +429,7 @@ def sub_function_minus_8_of_main_function_5():
     batch_size = input('input batch size for task decomposition. e.g. 20, you can also enter "auto" \n')
     try:
         batch_size = int(batch_size)
-    except:
+    except ValueError:
         pass
 
     generator = Generator()
@@ -531,7 +531,7 @@ def main_function_minus_3():
     batch_size = input('input batch size for task decomposition. e.g. 20, you can also enter "auto" \n')
     try:
         batch_size = int(batch_size)
-    except:
+    except ValueError:
         pass
     calculator = Calculator()
     calculator.calculate_mols_mpi(smiles_file_path=smiles_file_path,
@@ -569,7 +569,7 @@ def main_function_minus_4():
     batch_size = input('input batch size for task decomposition. e.g. 20, you can also enter "auto" \n')
     try:
         batch_size = int(batch_size)
-    except:
+    except ValueError:
         pass
     counter = Counter()
     counter.count_mols_mpi(smiles_file_path=smiles_file_path,

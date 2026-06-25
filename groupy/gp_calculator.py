@@ -1,11 +1,43 @@
+import logging
+from pathlib import Path
 from rdkit import Chem
 from math import log
 import pandas as pd
 from tqdm import tqdm
 from joblib import Parallel, delayed
 
+from groupy.chem import ensure_mol
+from groupy.exceptions import InvalidSmilesError
 from groupy.gp_loader import Loader
 from groupy.gp_counter import Counter
+from groupy.io import load_smiles_file, write_text_lines
+
+logger = logging.getLogger(__name__)
+
+
+def _report_progress(message, verbose):
+    logger.info(message)
+    if verbose:
+        print(message)
+
+
+def _failed_calculation_result(smiles, error):
+    return {'smiles': smiles,
+            'molar_mass': '?',
+            'flash_point/K': '?',
+            'Tm/K': '?', 'Tb/K': '?', 'Tc/K': '?',
+            'Pc/bar': '?', 'Vc/(cm3/mol)': '?',
+            'density/(g/cm3)': '?',
+            'delta_G/(KJ/mol)': '?',
+            'delta_Hf/(KJ/mol)': '?',
+            'delta_Hvap/(KJ/mol)': '?',
+            'delta_Hfus/(KJ/mol)': '?',
+            'molar_volume/(cm3/mol)(default298K)': '?',
+            'delta_Hc/(KJ/mol)': '?',
+            'mass_calorific_value_h/(MJ/kg)': '?',
+            'ISP': '?',
+            'note': 'There must be something wrong with this SMILES',
+            'error': error}
 
 
 class Calculator:
@@ -318,7 +350,8 @@ class Calculator:
             return False
 
 
-    def calculate_a_mol(self, mol, parameter_type='step_wise', check_hydrocarbon=True, debug=False):
+    def calculate_a_mol(self, mol, parameter_type='step_wise', check_hydrocarbon=True, debug=False,
+                        raise_on_error=False):
         """
         Calculating properties of a molecule.
         :param mol: instance of rdkit.Chem.rdchem.Mol or SMILES str which will be converter to rdkit.Chem.rdchem.Mol automatically.
@@ -326,6 +359,7 @@ class Calculator:
         :param check_hydrocarbon: bool. Since Calculator.delta_Hc() was designed for hydrocarbon, if set to True, Calculator will check whether the molecule is hydrocarbon.
         If the molecule is not hydrocarbon, Calculator will not calculate delta_Hc, q and ISP. If set to False, Calculator will calculate these properties no matter whether the molecule is hydrocarbon.
         Default=True.
+        :param raise_on_error: if True, re-raise expected input/calculation errors instead of returning placeholders.
         :return: dict like {'smiles': init_smi,
                     'molar_mass': value,
                     'flash_point/K': value,
@@ -343,9 +377,11 @@ class Calculator:
                     'note': value}
         """
         init_smi = mol
+        if parameter_type not in ['step_wise', 'simultaneous']:
+            raise ValueError('parameter_type must be "step_wise" or "simultaneous".')
+
         try:
-            if isinstance(mol, str):
-                mol = Chem.MolFromSmiles(mol)
+            mol = ensure_mol(mol)
             group_number = self.counter.count_a_mol(mol, clear_mode=True, add_note=True)
             if group_number.get('note', ''):
                 counter_note = group_number['note']
@@ -357,8 +393,6 @@ class Calculator:
                 parameters = self.parameters_step_wise
             elif parameter_type == 'simultaneous':
                 parameters = self.parameters_simultaneous
-            else:
-                raise NotImplemented('不可用的参数类型，只能使用step_wise或simultaneous')
 
             if debug:
                 print(group_number)
@@ -409,25 +443,15 @@ class Calculator:
                     'mass_calorific_value_h/(MJ/kg)': q,
                     'ISP': isp,
                     'note': counter_note + ' at 298K'}
-        except:
-            print(f'Error! There is something wrong when calculating {init_smi}, please check it.')
-            return {'smiles': init_smi,
-                    'molar_mass': '?',
-                    'flash_point/K': '?',
-                    'Tm/K': '?', 'Tb/K': '?', 'Tc/K': '?',
-                    'Pc/bar': '?', 'Vc/(cm3/mol)': '?',
-                    'density/(g/cm3)': '?',
-                    'delta_G/(KJ/mol)': '?',
-                    'delta_Hf/(KJ/mol)': '?',
-                    'delta_Hvap/(KJ/mol)': '?',
-                    'delta_Hfus/(KJ/mol)': '?',
-                    'molar_volume/(cm3/mol)(default298K)': '?',
-                    'delta_Hc/(KJ/mol)': '?',
-                    'mass_calorific_value_h/(MJ/kg)': '?',
-                    'ISP': '?',
-                    'note': 'There must be something wrong with this SMILES'}
+        except (InvalidSmilesError, TypeError, ValueError, KeyError, AttributeError, ArithmeticError) as exc:
+            if raise_on_error:
+                raise
+            logger.warning("Failed to calculate properties for %r: %s", init_smi, exc)
+            return _failed_calculation_result(init_smi, str(exc))
 
-    def calculate_mols(self, smiles_file_path, properties_file_path='gp_3x_result.csv', check_hydrocarbon=True, parameter_type='step_wise'):
+    def calculate_mols(self, smiles_file_path, properties_file_path='gp_3x_result.csv',
+                       check_hydrocarbon=True, parameter_type='step_wise',
+                       error_file_path=None, verbose=True, continue_on_error=True):
         """
         Calculating properties of a batch of molecules.
         :param smiles_file_path: path of the file(.txt, .xlsx, .csv) in which saved SMILES.
@@ -435,39 +459,51 @@ class Calculator:
         :param check_hydrocarbon: bool. Since Calculator.delta_Hc() was designed for hydrocarbon, if set to True, Calculator will check whether the molecule is hydrocarbon.
         If the molecule is not hydrocarbon, Calculator will not calculate delta_Hc, q and ISP. If set to False, Calculator will calculate these properties no matter whether the molecule is hydrocarbon.
         Default=True.
+        :param error_file_path: optional path for writing SMILES strings that failed during batch calculation.
+        :param verbose: if True, print progress messages and progress bars. Set False for programmatic or GUI use.
+        :param continue_on_error: if True, keep legacy batch behavior and write placeholder rows for failed SMILES.
         :return: instance of pandas.DataFrame
         """
-        print('reading input file...')
-        if smiles_file_path.endswith('.txt'):
-            smiles_iterator = list(open(smiles_file_path))
-        elif smiles_file_path.endswith('.xlsx'):
-            smiles_iterator = pd.read_excel(smiles_file_path)['smiles']
-        elif smiles_file_path.endswith('.csv'):
-            smiles_iterator = pd.read_csv(smiles_file_path)['smiles']
-        else:
-            print('无法识别的文件类型，请以.txt/.xlsx/.csv类型的文件作为输入。')
+        _report_progress('reading input file...', verbose)
+        try:
+            smiles_iterator = load_smiles_file(smiles_file_path)
+        except ValueError:
+            logger.warning('Unable to read SMILES input file %s; expected .txt, .xlsx, or .csv.', smiles_file_path)
+            if verbose:
+                print('无法识别的文件类型，请以.txt/.xlsx/.csv类型的文件作为输入。')
             return None
         mol_number = len(smiles_iterator)
-        print('reading completed，A total of {} molecules detected, start calculating properties...'.format(mol_number))
-        print('start calculating...')
+        _report_progress(
+            'reading completed，A total of {} molecules detected, start calculating properties...'.format(mol_number),
+            verbose,
+        )
+        _report_progress('start calculating...', verbose)
         properties_dict_list = []
         error_smi = []
-        for i in tqdm(smiles_iterator):
-            try:
-                properties_dict_list.append(self.calculate_a_mol(i, check_hydrocarbon=check_hydrocarbon, parameter_type=parameter_type))
-            except:
+        for i in tqdm(smiles_iterator, disable=not verbose):
+            result = self.calculate_a_mol(
+                i,
+                check_hydrocarbon=check_hydrocarbon,
+                parameter_type=parameter_type,
+                raise_on_error=not continue_on_error,
+            )
+            properties_dict_list.append(result)
+            if result.get('error'):
                 error_smi.append(i)
-        print('calculation completed!')
-        print('start to export result to {} ...'.format(properties_file_path))
+        _report_progress('calculation completed!', verbose)
+        _report_progress('start to export result to {} ...'.format(properties_file_path), verbose)
         result = pd.DataFrame(properties_dict_list)
-        result.to_csv(properties_file_path, index_label='index')
-        with open('error.txt', 'w') as f:
-            for i in error_smi:
-                f.write(i + '\n')
-        print('Done!')
+        output_path = Path(properties_file_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        result.to_csv(output_path, index_label='index')
+        if error_file_path is not None:
+            write_text_lines(error_smi, error_file_path)
+        _report_progress('Done!', verbose)
         return result
 
-    def calculate_mols_mpi(self, smiles_file_path, properties_file_path='gp_3x_result_mpi.csv', check_hydrocarbon=True, parameter_type='step_wise', n_jobs=1, batch_size='auto'):
+    def calculate_mols_mpi(self, smiles_file_path, properties_file_path='gp_3x_result_mpi.csv',
+                           check_hydrocarbon=True, parameter_type='step_wise',
+                           n_jobs=1, batch_size='auto', verbose=True, continue_on_error=True):
         """
         Calculating properties of a batch of molecules with MPI acceleration.
         :param smiles_file_path: path of the file(.txt, .xlsx, .csv) in which saved SMILES.
@@ -477,29 +513,51 @@ class Calculator:
         Default=True.
         :param n_jobs: int. Number of cores. Default=1
         :param batch_size: int. Task number per core. default='auto'
+        :param verbose: if True, print progress messages. Set False for programmatic or GUI use.
+        :param continue_on_error: if True, keep legacy batch behavior and write placeholder rows for failed SMILES.
         :return: instance of pandas.DataFrame
         """
-        print('reading input file...')
-        if smiles_file_path.endswith('.txt'):
-            smiles_iterator = list(open(smiles_file_path))
-        elif smiles_file_path.endswith('.xlsx'):
-            smiles_iterator = pd.read_excel(smiles_file_path)['smiles']
-        elif smiles_file_path.endswith('.csv'):
-            smiles_iterator = pd.read_csv(smiles_file_path)['smiles']
-        else:
-            print('无法识别的文件类型，请以.txt/.xlsx/.csv类型的文件作为输入。')
+        _report_progress('reading input file...', verbose)
+        try:
+            smiles_iterator = load_smiles_file(smiles_file_path)
+        except ValueError:
+            logger.warning('Unable to read SMILES input file %s; expected .txt, .xlsx, or .csv.', smiles_file_path)
+            if verbose:
+                print('无法识别的文件类型，请以.txt/.xlsx/.csv类型的文件作为输入。')
             return None
         mol_number = len(smiles_iterator)
-        print('reading completed，A total of {} molecules detected, start calculating properties...'.format(mol_number))
-        print('start calculating...')
-        task = [delayed(self.calculate_a_mol)(i, parameter_type=parameter_type, check_hydrocarbon=check_hydrocarbon) for i in smiles_iterator]
+        _report_progress(
+            'reading completed，A total of {} molecules detected, start calculating properties...'.format(mol_number),
+            verbose,
+        )
+        _report_progress('start calculating...', verbose)
+        task = [
+            delayed(self.calculate_a_mol)(
+                i,
+                parameter_type=parameter_type,
+                check_hydrocarbon=check_hydrocarbon,
+                raise_on_error=not continue_on_error,
+            )
+            for i in smiles_iterator
+        ]
         properties_dict_list = Parallel(n_jobs=n_jobs, batch_size=batch_size)(task)
-        print('calculation completed!')
-        print('start to export result to {} ...'.format(properties_file_path))
+        _report_progress('calculation completed!', verbose)
+        _report_progress('start to export result to {} ...'.format(properties_file_path), verbose)
         result = pd.DataFrame(properties_dict_list)
-        result.to_csv(properties_file_path, index_label='index')
-        print('Done!')
+        output_path = Path(properties_file_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        result.to_csv(output_path, index_label='index')
+        _report_progress('Done!', verbose)
         return result
+
+    def calculate_mols_parallel(self, *args, **kwargs):
+        """
+        Calculating properties of a batch of molecules with joblib parallelism.
+
+        This is the preferred name for new code. It calls calculate_mols_mpi()
+        for backward compatibility with the original API.
+        """
+        return self.calculate_mols_mpi(*args, **kwargs)
 
 
 # if __name__ == '__main__':

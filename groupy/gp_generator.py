@@ -1,12 +1,24 @@
+import logging
 from rdkit import Chem
-import os
+from pathlib import Path
 from tqdm import tqdm
 from joblib import Parallel, delayed
 import time
 import random
 
+from groupy.chem import ensure_mol
+from groupy.exceptions import ConversionError, InvalidSmilesError
 from groupy.gp_convertor import Convertor
-from groupy.gp_tool import Tool
+from groupy.io import load_smiles_file, write_text_lines
+
+logger = logging.getLogger(__name__)
+GENERATION_EXCEPTIONS = (ConversionError, InvalidSmilesError, TypeError, OSError, RuntimeError, ValueError)
+
+
+def _report_progress(message, verbose):
+    logger.info(message)
+    if verbose:
+        print(message)
 
 
 class Generator:
@@ -25,8 +37,7 @@ class Generator:
         :param smi: SMILES str or instance of rdkit.Chem.rdchem.Mol
         :return: (int, int). (net charge, all charge)
         """
-        if isinstance(smi, str):
-            smi = Chem.MolFromSmiles(smi)
+        smi = ensure_mol(smi)
         smi = Chem.AddHs(smi)  # add H
         net_charge = 0
         all_charge = 0
@@ -48,8 +59,7 @@ class Generator:
         :param smi: SMILES str or instance of rdkit.Chem.rdchem.Mol
         :return: (int, int). (net charge, all charge)
         """
-        if isinstance(smi, str):
-            smi = Chem.MolFromSmiles(smi)
+        smi = ensure_mol(smi)
         net_charge, all_charge = self.calculate_charge(smi)
         alpha_minus_beta = all_charge % 2
         multiplicity = alpha_minus_beta + 1
@@ -86,25 +96,30 @@ class Generator:
         # default task
         if gaussian_keywords is None:
             gaussian_keywords = '#p opt freq b3lyp/6-31g*'
-        # default charge and multiplicity
-        if charge_and_multiplicity is None:
-            charge_and_multiplicity = f'{self.calculate_charge(smi)[0]} {self.calculate_multiplicity(smi)}'
         # default other tasks
         if other_tasks is None:
             other_tasks = [
                 '#p m062x/def2tzvp geom=check',
                 '#p m062x/def2tzvp scrf=solvent=water geom=check',
             ]
+        temp_xyz_path = None
         try:
+            # default charge and multiplicity
+            if charge_and_multiplicity is None:
+                charge_and_multiplicity = f'{self.calculate_charge(smi)[0]} {self.calculate_multiplicity(smi)}'
+
             # read smi
             c = Convertor()
             temp_xyz_path = f'temp_{str(time.time()) + str(random.randint(0,1000000000000000000))}.xyz'
-            c.smi_to_xyz(smi=smi, xyz_path=temp_xyz_path)
+            if not c.smi_to_xyz(smi=smi, xyz_path=temp_xyz_path):
+                raise ConversionError(f'Failed to convert {smi} to xyz coordinates.')
 
             # write gjf
             # 判断是否存在同名gjf
-            if os.path.exists(gjf_path):
-                os.remove(gjf_path)
+            gjf_output_path = Path(gjf_path)
+            gjf_output_path.parent.mkdir(parents=True, exist_ok=True)
+            if gjf_output_path.exists():
+                gjf_output_path.unlink()
             self.write_gjf_link0_and_keyword(gjf_path=gjf_path, chk_path=chk_path, nproc=nproc, mem=mem,
                                              gaussian_keywords=gaussian_keywords,
                                              charge_and_multiplicity=charge_and_multiplicity, note=smi)
@@ -118,18 +133,22 @@ class Generator:
                                                      note=smi, old_chk_path=chk_path, add_link1=True)
                     self.write_gjf_blank_line(gjf_path=gjf_path, blank_line_number=2)
 
-            # 删除临时xyz文件
-            os.remove(temp_xyz_path)
             return True
-        except:
-            print(f'Error! There is something wrong when converting {smi} to gjf file, please check it.')
+        except GENERATION_EXCEPTIONS as exc:
+            logger.warning("Failed to generate gjf for %r: %s", smi, exc)
             return False
+        finally:
+            if temp_xyz_path is not None:
+                Path(temp_xyz_path).unlink(missing_ok=True)
 
     def batch_smi_to_gjf(self, smiles_file_path, gjf_root_path=None,
                          nproc='12', mem='12GB',
                          gaussian_keywords=None, charge_and_multiplicity=None,
                          add_other_tasks=False, other_tasks: list = None,
                          index_start=0,
+                         fail_file_path=None, succeed_file_path=None,
+                         verbose=True,
+                         continue_on_error=True,
                          ):
         """
         Generating some gjf files based on a file in which saved some SMILES.
@@ -144,57 +163,75 @@ class Generator:
         :param add_other_tasks: bool. Whether to add other job into you gjf file. Default=False
         :param other_tasks: list. Jobs you want to add into you gjf file. Default = ['#p m062x/def2tzvp geom=check',
                     '#p m062x/def2tzvp scrf=solvent=water geom=check',]. Note that this parameter will only be used if add_other_tasks=True.
+        :param fail_file_path: optional path for writing SMILES strings that failed to generate gjf files.
+        :param succeed_file_path: optional path for writing SMILES strings that successfully generated gjf files.
+        :param verbose: if True, print progress messages and progress bars. Set False for programmatic or GUI use.
+        :param continue_on_error: if True, continue generating later SMILES after one generation fails.
         :return: None
         """
-        smiles_iterator = Tool.load_smiles_iterator(smiles_file_path=smiles_file_path)
+        if gjf_root_path is None:
+            gjf_root_path = 'gjf'
+        _report_progress('reading input file...', verbose)
+        smiles_iterator = load_smiles_file(smiles_file_path)
         mol_number = len(smiles_iterator)
         zfill_number = len(str(mol_number)) + 5
-        print('reading completed，A total of {} molecules detected, start calculating properties...'.format(mol_number))
+        _report_progress(
+            'reading completed，A total of {} molecules detected, start calculating properties...'.format(mol_number),
+            verbose,
+        )
 
-        # make gjf_root_path
-        if os.path.exists(gjf_root_path):
-            print('gjf_root_path "{}" has been detected!'.format(gjf_root_path))
+        gjf_root = Path(gjf_root_path)
+        if gjf_root.exists():
+            _report_progress('gjf_root_path "{}" has been detected!'.format(gjf_root), verbose)
         else:
-            print('gjf_root_path "{}" has not been detected, I will create it for you'.format(gjf_root_path))
-            os.makedirs(gjf_root_path)
-        # end
+            _report_progress(
+                'gjf_root_path "{}" has not been detected, I will create it for you'.format(gjf_root),
+                verbose,
+            )
+            gjf_root.mkdir(parents=True, exist_ok=True)
 
         succeed = []
         fail = []
-        for (index, smi) in tqdm(enumerate(smiles_iterator)):
+        for (index, smi) in tqdm(enumerate(smiles_iterator), disable=not verbose):
             smi = smi.strip()
             index += index_start
             chk_path = '{}.chk'.format(str(index).zfill(zfill_number))
-            gjf_path = os.path.join(gjf_root_path, '{}.gjf'.format(str(index).zfill(zfill_number)))
+            gjf_path = gjf_root / '{}.gjf'.format(str(index).zfill(zfill_number))
             generate_success_flag = self.smi_to_gjf(smi=smi, nproc=nproc, mem=mem,
-                                                    chk_path=chk_path, gjf_path=gjf_path,
+                                                    chk_path=chk_path, gjf_path=str(gjf_path),
                                                     gaussian_keywords=gaussian_keywords,
                                                     charge_and_multiplicity=charge_and_multiplicity,
                                                     add_other_tasks=add_other_tasks, other_tasks=other_tasks,
                                                     )
             if not generate_success_flag:
                 fail.append(smi)
+                if not continue_on_error:
+                    if fail_file_path is not None:
+                        write_text_lines(fail, fail_file_path)
+                    if succeed_file_path is not None:
+                        write_text_lines(succeed, succeed_file_path)
+                    raise ConversionError(f'Failed to generate gjf for {smi!r}.')
             else:
                 succeed.append(smi)
 
-        with open('gjf_fail.txt', 'w') as f:
-            for i in fail:
-                f.write(i + '\n')
-        with open('gjf_succeed.txt', 'w') as f:
-            for i in succeed:
-                f.write(i + '\n')
+        if fail_file_path is not None:
+            write_text_lines(fail, fail_file_path)
+        if succeed_file_path is not None:
+            write_text_lines(succeed, succeed_file_path)
         if len(fail) == 0:
-            print('done! all .gjf files has been saved in {}'.format(gjf_root_path))
+            _report_progress('done! all .gjf files has been saved in {}'.format(gjf_root), verbose)
         else:
-            print('Warning! The following SMILES fail to generate .gjf, please check...sorry(OTZ)')
-            print(fail)
+            logger.warning("Failed to generate gjf files for SMILES: %s", fail)
+            if verbose:
+                print('Warning! The following SMILES fail to generate .gjf, please check...sorry(OTZ)')
+                print(fail)
         return None
 
     def batch_smi_to_gjf_mpi(self, smiles_file_path, gjf_root_path=None,
                              nproc='12', mem='12GB',
                              gaussian_keywords=None, charge_and_multiplicity=None,
                              add_other_tasks=False, other_tasks: list = None,
-                             n_jobs=1, batch_size='auto'
+                             n_jobs=1, batch_size='auto', verbose=True, continue_on_error=True
                          ):
         """
         Generating some gjf files based on a file in which saved some SMILES with MPI acceleration.
@@ -211,30 +248,52 @@ class Generator:
                     '#p m062x/def2tzvp scrf=solvent=water geom=check',]. Note that this parameter will only be used if add_other_tasks=True.
         :param n_jobs: int. number of CPU cores you want to use when generating gjf file.
         :param batch_size: int or str. Number of tasks per CPU core you want to use when generating gjf file. Default='auto'.
+        :param verbose: if True, print progress messages. Set False for programmatic or GUI use.
+        :param continue_on_error: if True, return all task results even when some generations fail.
         :return: None
         """
-        smiles_iterator = Tool.load_smiles_iterator(smiles_file_path=smiles_file_path)
+        if gjf_root_path is None:
+            gjf_root_path = 'gjf'
+        _report_progress('reading input file...', verbose)
+        smiles_iterator = load_smiles_file(smiles_file_path)
         mol_number = len(smiles_iterator)
         zfill_number = len(str(mol_number)) + 5
-        print('reading completed，A total of {} molecules detected, start calculating properties...'.format(mol_number))
+        _report_progress(
+            'reading completed，A total of {} molecules detected, start calculating properties...'.format(mol_number),
+            verbose,
+        )
 
-        # make gjf_root_path
-        if os.path.exists(gjf_root_path):
-            print('gjf_root_path "{}" has been detected!'.format(gjf_root_path))
+        gjf_root = Path(gjf_root_path)
+        if gjf_root.exists():
+            _report_progress('gjf_root_path "{}" has been detected!'.format(gjf_root), verbose)
         else:
-            print('gjf_root_path "{}" has not been detected, I will create it for you'.format(gjf_root_path))
-            os.makedirs(gjf_root_path)
+            _report_progress(
+                'gjf_root_path "{}" has not been detected, I will create it for you'.format(gjf_root),
+                verbose,
+            )
+            gjf_root.mkdir(parents=True, exist_ok=True)
 
         # task
         task = [delayed(self.smi_to_gjf)(smi=smi, nproc=nproc, mem=mem,
                                          chk_path='{}.chk'.format(str(index).zfill(zfill_number)),
-                                         gjf_path=os.path.join(gjf_root_path, '{}.gjf'.format(str(index).zfill(zfill_number))),
+                                         gjf_path=str(gjf_root / '{}.gjf'.format(str(index).zfill(zfill_number))),
                                          gaussian_keywords=gaussian_keywords,
                                          charge_and_multiplicity=charge_and_multiplicity,
                                          add_other_tasks=add_other_tasks, other_tasks=other_tasks,)
                 for index, smi in enumerate(smiles_iterator)]
         result = Parallel(n_jobs=n_jobs, batch_size=batch_size)(task)
+        if not continue_on_error and not all(result):
+            raise ConversionError('Failed to generate one or more gjf files.')
         return result
+
+    def batch_smi_to_gjf_parallel(self, *args, **kwargs):
+        """
+        Generating Gaussian job files with joblib parallelism.
+
+        This is the preferred name for new code. It calls batch_smi_to_gjf_mpi()
+        for backward compatibility with the original API.
+        """
+        return self.batch_smi_to_gjf_mpi(*args, **kwargs)
 
     @staticmethod
     def write_gjf_link0_and_keyword(gjf_path, chk_path, nproc, mem, gaussian_keywords, charge_and_multiplicity, note,
@@ -242,7 +301,7 @@ class Generator:
         """
         Only used in Generator.smi_to_gjf()
         """
-        with open(gjf_path, 'a') as gjf:
+        with Path(gjf_path).open('a', encoding='utf-8') as gjf:
             if add_link1:
                 gjf.write('--link1--' + '\n')
             gjf.write(f'%nproc={nproc}' + '\n')
@@ -263,9 +322,10 @@ class Generator:
         """
         Only used in Generator.smi_to_gjf()
         """
-        xyz = open(xyz_path)
-        with open(gjf_path, 'a') as gjf:
-            for i in xyz.readlines()[2:]:
+        with Path(xyz_path).open(encoding='utf-8') as xyz:
+            coord_lines = xyz.readlines()[2:]
+        with Path(gjf_path).open('a', encoding='utf-8') as gjf:
+            for i in coord_lines:
                 gjf.write(i)
             gjf.write('\n\n')
         return None
@@ -275,7 +335,7 @@ class Generator:
         """
         Only used in Generator.smi_to_gjf()
         """
-        with open(gjf_path, 'a') as gjf:
+        with Path(gjf_path).open('a', encoding='utf-8') as gjf:
             gjf.write('\n' * blank_line_number)
         return None
 
@@ -293,4 +353,3 @@ class Generator:
 #     # g.batch_smi_to_gjf_mpi(smiles_file_path='gp_3x_test_mol/3018_with_error_smiles.txt', gjf_root_path='./test_gjf',
 #     #                        add_other_tasks=True,
 #     #                        n_jobs=8, batch_size='auto')
-

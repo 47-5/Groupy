@@ -1,10 +1,41 @@
-import ase
-from ase.visualize import view
-from ase.io import read
-import os
+import logging
+from pathlib import Path
 from pprint import pprint
+import tempfile
 
 from groupy.gp_convertor import Convertor
+
+logger = logging.getLogger(__name__)
+VIEWER_READ_EXCEPTIONS = (OSError, RuntimeError, ValueError)
+
+_ASE_INSTALL_HINT = (
+    "ASE is required for molecular visualization. "
+    "Install it with `pip install ase` or `conda install -c conda-forge ase`."
+)
+
+
+def _load_ase_read():
+    try:
+        from ase.io import read
+    except ImportError as exc:
+        raise ImportError(_ASE_INSTALL_HINT) from exc
+    return read
+
+
+def _load_ase_view():
+    try:
+        from ase.visualize import view
+    except ImportError as exc:
+        raise ImportError(_ASE_INSTALL_HINT) from exc
+    return view
+
+
+def _load_ase_formats():
+    try:
+        from ase.io.formats import ioformats
+    except ImportError as exc:
+        raise ImportError(_ASE_INSTALL_HINT) from exc
+    return ioformats
 
 
 class Viewer:
@@ -23,20 +54,37 @@ class Viewer:
         :param mol_type: str.
         :return: None.
         """
+        read = _load_ase_read()
+        view = _load_ase_view()
         if isinstance(mol, str):
+            temp_xyz_path = None
             if mol_type in ['smi', 'smiles', 'SMILES']:
                 convertor = Convertor()
-                convertor.smi_to_xyz(smi=mol, xyz_path='temp.xyz')
-                mol = read(filename='temp.xyz', format='xyz')
-                os.remove('temp.xyz')
+                with tempfile.NamedTemporaryFile(suffix='.xyz', delete=False) as temp_xyz:
+                    temp_xyz_path = Path(temp_xyz.name)
+                try:
+                    convertor.smi_to_xyz(smi=mol, xyz_path=str(temp_xyz_path))
+                    mol = read(filename=str(temp_xyz_path), format='xyz')
+                finally:
+                    temp_xyz_path.unlink(missing_ok=True)
             else:
                 try:
                     mol = read(filename=mol, format=mol_type)
-                except:
+                except VIEWER_READ_EXCEPTIONS as exc:
+                    logger.info("ASE could not read %s as %s directly: %s", mol, mol_type, exc)
                     convertor = Convertor()
-                    convertor.convert_file_type(in_format=mol_type, in_path=mol, out_format='xyz', out_path='temp.xyz')
-                    mol = read(filename='temp.xyz', format='xyz')
-                    os.remove('temp.xyz')
+                    with tempfile.NamedTemporaryFile(suffix='.xyz', delete=False) as temp_xyz:
+                        temp_xyz_path = Path(temp_xyz.name)
+                    try:
+                        convertor.convert_file_type(
+                            in_format=mol_type,
+                            in_path=mol,
+                            out_format='xyz',
+                            out_path=str(temp_xyz_path),
+                        )
+                        mol = read(filename=str(temp_xyz_path), format='xyz')
+                    finally:
+                        temp_xyz_path.unlink(missing_ok=True)
         view(mol)
         return None
 
@@ -45,7 +93,7 @@ class Viewer:
         print all supported file formats.
         :return: None.
         """
-        ase_format = ase.io.formats.ioformats
+        ase_format = _load_ase_formats()
         openbabel_format = {'abinit': 'ABINIT Output Format', 'acesout': 'ACES output format', 'acr': 'ACR format',
         'adfband': 'ADF Band output format', 'adfdftb': 'ADF DFTB output format', 'adfout': 'ADF output format',
         'alc': 'Alchemy format', 'aoforce': 'Turbomole AOFORCE output format',
