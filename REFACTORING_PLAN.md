@@ -202,6 +202,7 @@ Current parallel API status:
   - [x] library API examples
   - [x] CLI examples
   - [x] GUI install and launch examples
+  - [x] packaged app release checklist link
 - [ ] Add a build check:
   - `python -m build`
 - [ ] Add GitHub Actions for:
@@ -229,6 +230,7 @@ Current parallel API status:
 - [x] Test the packaged app can launch and run.
 - [ ] Test the packaged app on a clean Windows environment.
 - [x] Document limitations around OpenBabel and optional conversion features.
+- [x] Add a release checklist for ordinary-user distribution.
 
 Current GUI status:
 
@@ -246,6 +248,7 @@ Current GUI status:
 - README now recommends building from a clean conda-forge packaging environment before trying manual file exclusions.
 - `_internal` size optimization is deferred until the user-facing workflow and release checklist are stable.
 - README documents that OpenBabel conversion, Gaussian input generation, and ASE visualization remain optional workflows outside the default GUI workflow.
+- `RELEASE_CHECKLIST.md` captures the pre-release build checks, GUI smoke test, clean Windows validation, and packaged app distribution notes.
 
 ## Current Known Review Findings
 
@@ -260,6 +263,6 @@ Current GUI status:
 
 Continue with Phase 9:
 
-1. Test the packaged app on a clean Windows environment.
-2. Add a short release checklist for ordinary-user distribution.
+1. Run `RELEASE_CHECKLIST.md` on a clean Windows environment.
+2. Record any clean Windows findings in the release notes or README.
 3. Return to `_internal` size optimization after the release workflow is stable.

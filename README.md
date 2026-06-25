@@ -63,6 +63,8 @@ python scripts\build_windows_app.py
 
 The `_internal` folder contains bundled runtime libraries. Large MKL or BLAS DLLs usually come from the build environment and should not be deleted manually unless the packaged app is retested.
 
+Before distributing a packaged app to ordinary users, follow `RELEASE_CHECKLIST.md`.
+
 The desktop app is intended for ordinary users who need SMILES-based property calculation, group counting, and CSV export. Optional workflows have separate dependency requirements:
 
 - Conversion and Gaussian input generation require OpenBabel from conda-forge and are not part of the default GUI workflow.

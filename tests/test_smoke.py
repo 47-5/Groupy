@@ -153,6 +153,19 @@ class PackagingSmokeTests(unittest.TestCase):
         self.assertIn("not part of the default GUI workflow", readme)
         self.assertIn("clean Windows machine", readme)
         self.assertIn("Package size optimization is intentionally deferred", readme)
+        self.assertIn("RELEASE_CHECKLIST.md", readme)
+
+    def test_release_checklist_documents_double_click_distribution(self):
+        checklist_path = Path(__file__).resolve().parents[1] / "RELEASE_CHECKLIST.md"
+        checklist = checklist_path.read_text(encoding="utf-8")
+
+        self.assertIn("dist/Groupy/Groupy.exe", checklist)
+        self.assertIn("dist/Groupy", checklist)
+        self.assertIn("_internal", checklist)
+        self.assertIn("clean Windows", checklist)
+        self.assertIn("C1CCCC1", checklist)
+        self.assertIn("CSV export", checklist)
+        self.assertIn("OpenBabel from conda-forge", checklist)
 
 
 class CoreChemistrySmokeTests(unittest.TestCase):
