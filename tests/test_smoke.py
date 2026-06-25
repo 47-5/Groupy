@@ -99,8 +99,28 @@ class PackagingSmokeTests(unittest.TestCase):
         self.assertNotIn("ase", dependencies)
         self.assertEqual(optional_dependencies["viewer"], ["ase"])
         self.assertEqual(optional_dependencies["gui"], ["PySide6"])
+        self.assertEqual(optional_dependencies["package"], ["PyInstaller"])
         self.assertEqual(optional_dependencies["convert"], [])
         self.assertIn("pytest", optional_dependencies["dev"])
+
+    def test_windows_package_script_dry_run_uses_gui_entry(self):
+        script_path = Path(__file__).resolve().parents[1] / "scripts" / "build_windows_app.py"
+        completed = subprocess.run(
+            [sys.executable, str(script_path), "--dry-run"],
+            text=True,
+            capture_output=True,
+            timeout=20,
+            check=False,
+        )
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertIn("PyInstaller command:", completed.stdout)
+        self.assertIn("--windowed", completed.stdout)
+        self.assertIn("--onedir", completed.stdout)
+        self.assertIn("--collect-data=groupy", completed.stdout)
+        self.assertIn("--collect-submodules=rdkit", completed.stdout)
+        self.assertIn("groupy_gui_entry.py", completed.stdout)
+        self.assertIn("dist", completed.stdout)
 
 
 class CoreChemistrySmokeTests(unittest.TestCase):

@@ -25,6 +25,9 @@ convert = []
 gui = [
     "PySide6",
 ]
+package = [
+    "PyInstaller",
+]
 viewer = [
     "ase",
 ]

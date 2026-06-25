@@ -24,6 +24,10 @@ Install desktop GUI support when needed:
 
 `python -m pip install -e ".[gui]"`
 
+Install Windows app packaging support when needed:
+
+`python -m pip install -e ".[gui,package]"`
+
 Install conversion and Gaussian input generation support when needed:
 
 `conda install -c conda-forge openbabel` (**Do not** use `pip install openbabel`.)
@@ -41,6 +45,12 @@ For non-interactive use, one can run commands such as:
 To launch the desktop GUI after installing GUI support:
 
 `Groupy-GUI`
+
+To build a double-clickable Windows app folder:
+
+`python scripts/build_windows_app.py`
+
+The default build output is `dist/Groupy/Groupy.exe`. Use `--mode onefile` to build a single executable.
 
 For Python scripts or GUI integrations, use quiet batch calls:
 

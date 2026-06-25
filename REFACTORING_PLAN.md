@@ -225,7 +225,7 @@ Current parallel API status:
 - [x] Visually smoke-test the initial GUI runtime.
 - [x] Add background worker handling so long calculations do not freeze the UI.
 - [x] Add GUI smoke tests where practical.
-- [ ] Add packaging script for Windows executable builds.
+- [x] Add packaging script for Windows executable builds.
 - [ ] Test the packaged app on a clean Windows environment.
 - [ ] Document limitations around OpenBabel and optional conversion features.
 
@@ -237,6 +237,8 @@ Current GUI status:
 - The user confirmed the first GUI can run normally in a GUI-capable environment.
 - Property calculation and group counting now run in a `QThread` worker instead of the GUI thread.
 - Worker-based GUI behavior still needs visual confirmation in a PySide6 environment.
+- `scripts/build_windows_app.py` builds a PyInstaller app folder by default at `dist/Groupy/Groupy.exe`.
+- The build script supports `--dry-run` for command inspection without requiring PyInstaller/PySide6.
 
 ## Current Known Review Findings
 
@@ -252,5 +254,5 @@ Current GUI status:
 Continue with Phase 9:
 
 1. Visually confirm worker-based calculation/counting in a PySide6 environment.
-2. Add a Windows packaging script for a double-clickable executable build.
+2. Run `python scripts/build_windows_app.py` in a `.[gui,package]` environment.
 3. Test the packaged app on a clean Windows environment.
