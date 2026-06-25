@@ -91,3 +91,4 @@ Test the final artifact on a Windows machine without the development environment
 ## 8. Validation Record
 
 - 2026-06-25: User confirmed the packaged app validation can run normally.
+- 2026-06-25: User confirmed the enhanced GUI with import, options, and 2D structure preview looks satisfactory.

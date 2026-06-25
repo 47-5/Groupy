@@ -247,8 +247,9 @@ Current GUI status:
 - `groupy.gui` imports without importing PySide6, so core CLI/API usage remains lightweight.
 - The user confirmed the first GUI can run normally in a GUI-capable environment.
 - The GUI now supports SMILES file import, RDKit 2D structure preview, parameter type selection, hydrocarbon filtering, zero-count group display, and optional SMILES columns.
+- The user confirmed the enhanced GUI layout and interaction are satisfactory.
 - Property calculation and group counting now run in a `QThread` worker instead of the GUI thread.
-- Worker-based GUI behavior still needs visual confirmation in a PySide6 environment.
+- Worker-based GUI behavior has been visually checked in a PySide6 environment.
 - `scripts/build_windows_app.py` builds a PyInstaller app folder by default at `dist/Groupy/Groupy.exe`.
 - The build script supports `--dry-run` for command inspection without requiring PyInstaller/PySide6.
 - The user confirmed `dist/Groupy/Groupy.exe` can run normally.
