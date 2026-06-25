@@ -92,8 +92,14 @@ Batch APIs keep processing failed molecules by default for backward compatibilit
 
 CI runs the smoke tests, source compilation check, `python -m build`, and a dry-run Windows app packaging command.
 
-### Manual and Documention
-The user manual is in the manual folder. Generated API documentation can be found in the doc folder and should be kept separate from source documentation.
+### Manual and Documentation
+
+Current user manuals:
+
+- Chinese: `manual/USER_MANUAL_zh.md`
+- English: `manual/USER_MANUAL_en.md`
+
+The older background-oriented manual remains in `manual/Groupy_manual.md`. Generated API documentation can be found in the doc folder and should be kept separate from source documentation.
 
 
 # Known limitation

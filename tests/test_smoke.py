@@ -191,6 +191,24 @@ class PackagingSmokeTests(unittest.TestCase):
         self.assertIn("conda-forge packaging environment", report)
         self.assertIn("--no-clean-dist", report)
 
+    def test_user_manuals_document_current_gui_and_packaging_workflows(self):
+        root = Path(__file__).resolve().parents[1]
+        zh_manual = (root / "manual" / "USER_MANUAL_zh.md").read_text(encoding="utf-8")
+        en_manual = (root / "manual" / "USER_MANUAL_en.md").read_text(encoding="utf-8")
+        readme = (root / "README.md").read_text(encoding="utf-8")
+
+        for manual in (zh_manual, en_manual):
+            self.assertIn("Groupy-GUI", manual)
+            self.assertIn("Import File", manual)
+            self.assertIn("2D", manual)
+            self.assertIn("Groupy calculate --smiles C1CCCC1", manual)
+            self.assertIn("PACKAGING_SIZE_REPORT.md", manual)
+            self.assertIn("libblas=*=*openblas", manual)
+            self.assertIn("OpenBabel", manual)
+
+        self.assertIn("manual/USER_MANUAL_zh.md", readme)
+        self.assertIn("manual/USER_MANUAL_en.md", readme)
+
     def test_ci_workflow_runs_build_and_package_checks(self):
         workflow_path = Path(__file__).resolve().parents[1] / ".github" / "workflows" / "ci.yml"
         workflow = workflow_path.read_text(encoding="utf-8")
