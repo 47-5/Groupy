@@ -228,7 +228,7 @@ Current parallel API status:
 - [x] Add packaging script for Windows executable builds.
 - [x] Test the packaged app can launch and run.
 - [ ] Test the packaged app on a clean Windows environment.
-- [ ] Document limitations around OpenBabel and optional conversion features.
+- [x] Document limitations around OpenBabel and optional conversion features.
 
 Current GUI status:
 
@@ -242,6 +242,10 @@ Current GUI status:
 - The build script supports `--dry-run` for command inspection without requiring PyInstaller/PySide6.
 - The user confirmed `dist/Groupy/Groupy.exe` can run normally.
 - The generated `_internal` folder is currently large, about 753.5 MB, mainly because Intel MKL DLLs are bundled from the build environment.
+- The build script now excludes clearly unused optional modules by default and supports `--no-default-excludes` / `--exclude-module` for tuning.
+- README now recommends building from a clean conda-forge packaging environment before trying manual file exclusions.
+- `_internal` size optimization is deferred until the user-facing workflow and release checklist are stable.
+- README documents that OpenBabel conversion, Gaussian input generation, and ASE visualization remain optional workflows outside the default GUI workflow.
 
 ## Current Known Review Findings
 
@@ -256,6 +260,6 @@ Current GUI status:
 
 Continue with Phase 9:
 
-1. Reduce packaged app size by building from a lean conda-forge packaging environment and excluding unused modules where safe.
-2. Test the packaged app on a clean Windows environment.
-3. Document limitations around OpenBabel and optional conversion features.
+1. Test the packaged app on a clean Windows environment.
+2. Add a short release checklist for ordinary-user distribution.
+3. Return to `_internal` size optimization after the release workflow is stable.

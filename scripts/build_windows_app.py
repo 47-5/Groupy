@@ -13,6 +13,18 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 ENTRY_SCRIPT = ROOT / "scripts" / "groupy_gui_entry.py"
+DEFAULT_EXCLUDES = [
+    "IPython",
+    "PyQt5",
+    "PyQt6",
+    "PySide2",
+    "jupyter",
+    "matplotlib",
+    "notebook",
+    "pytest",
+    "sphinx",
+    "tkinter",
+]
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -39,6 +51,17 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--console", action="store_true", help="Keep a console window for debugging.")
     parser.add_argument("--no-clean", action="store_true", help="Do not clear PyInstaller cache before building.")
+    parser.add_argument(
+        "--no-default-excludes",
+        action="store_true",
+        help="Do not exclude the default list of unused optional modules.",
+    )
+    parser.add_argument(
+        "--exclude-module",
+        action="append",
+        default=[],
+        help="Additional module to exclude from the PyInstaller build. Can be used more than once.",
+    )
     parser.add_argument("--dry-run", action="store_true", help="Print the command without running PyInstaller.")
     args = parser.parse_args(argv)
 
@@ -94,6 +117,13 @@ def build_command(args: argparse.Namespace) -> list[str]:
         "--collect-submodules=rdkit",
         f"--{args.mode}",
     ]
+
+    excludes = []
+    if not args.no_default_excludes:
+        excludes.extend(DEFAULT_EXCLUDES)
+    excludes.extend(args.exclude_module)
+    for module in excludes:
+        command.append(f"--exclude-module={module}")
 
     if args.console:
         command.append("--console")

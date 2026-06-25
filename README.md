@@ -52,6 +52,24 @@ To build a double-clickable Windows app folder:
 
 The default build output is `dist/Groupy/Groupy.exe`. Use `--mode onefile` to build a single executable.
 
+For a smaller package, build from a clean packaging environment instead of a broad development environment:
+
+```powershell
+conda create -n groupy_package -c conda-forge python=3.11 rdkit pandas numpy openpyxl tqdm joblib pyside6 pyinstaller
+conda activate groupy_package
+python -m pip install -e . --no-deps
+python scripts\build_windows_app.py
+```
+
+The `_internal` folder contains bundled runtime libraries. Large MKL or BLAS DLLs usually come from the build environment and should not be deleted manually unless the packaged app is retested.
+
+The desktop app is intended for ordinary users who need SMILES-based property calculation, group counting, and CSV export. Optional workflows have separate dependency requirements:
+
+- Conversion and Gaussian input generation require OpenBabel from conda-forge and are not part of the default GUI workflow.
+- Molecular visualization requires `.[viewer]` and ASE.
+- A packaged Windows app should be tested on a clean Windows machine before distribution.
+- Package size optimization is intentionally deferred until the user-facing workflow is stable, because removing runtime DLLs without retesting can break the executable.
+
 For Python scripts or GUI integrations, use quiet batch calls:
 
 ```python

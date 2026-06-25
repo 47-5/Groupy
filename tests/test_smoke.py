@@ -119,8 +119,40 @@ class PackagingSmokeTests(unittest.TestCase):
         self.assertIn("--onedir", completed.stdout)
         self.assertIn("--collect-data=groupy", completed.stdout)
         self.assertIn("--collect-submodules=rdkit", completed.stdout)
+        self.assertIn("--exclude-module=matplotlib", completed.stdout)
+        self.assertIn("--exclude-module=IPython", completed.stdout)
         self.assertIn("groupy_gui_entry.py", completed.stdout)
         self.assertIn("dist", completed.stdout)
+
+    def test_windows_package_script_accepts_custom_excludes(self):
+        script_path = Path(__file__).resolve().parents[1] / "scripts" / "build_windows_app.py"
+        completed = subprocess.run(
+            [
+                sys.executable,
+                str(script_path),
+                "--dry-run",
+                "--no-default-excludes",
+                "--exclude-module",
+                "example_unused_module",
+            ],
+            text=True,
+            capture_output=True,
+            timeout=20,
+            check=False,
+        )
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertIn("--exclude-module=example_unused_module", completed.stdout)
+        self.assertNotIn("--exclude-module=matplotlib", completed.stdout)
+
+    def test_readme_documents_packaged_app_limitations(self):
+        readme_path = Path(__file__).resolve().parents[1] / "README.md"
+        readme = readme_path.read_text(encoding="utf-8")
+
+        self.assertIn("OpenBabel from conda-forge", readme)
+        self.assertIn("not part of the default GUI workflow", readme)
+        self.assertIn("clean Windows machine", readme)
+        self.assertIn("Package size optimization is intentionally deferred", readme)
 
 
 class CoreChemistrySmokeTests(unittest.TestCase):
