@@ -226,6 +226,7 @@ Current parallel API status:
 - [x] Add background worker handling so long calculations do not freeze the UI.
 - [x] Add GUI smoke tests where practical.
 - [x] Add packaging script for Windows executable builds.
+- [x] Test the packaged app can launch and run.
 - [ ] Test the packaged app on a clean Windows environment.
 - [ ] Document limitations around OpenBabel and optional conversion features.
 
@@ -239,6 +240,8 @@ Current GUI status:
 - Worker-based GUI behavior still needs visual confirmation in a PySide6 environment.
 - `scripts/build_windows_app.py` builds a PyInstaller app folder by default at `dist/Groupy/Groupy.exe`.
 - The build script supports `--dry-run` for command inspection without requiring PyInstaller/PySide6.
+- The user confirmed `dist/Groupy/Groupy.exe` can run normally.
+- The generated `_internal` folder is currently large, about 753.5 MB, mainly because Intel MKL DLLs are bundled from the build environment.
 
 ## Current Known Review Findings
 
@@ -253,6 +256,6 @@ Current GUI status:
 
 Continue with Phase 9:
 
-1. Visually confirm worker-based calculation/counting in a PySide6 environment.
-2. Run `python scripts/build_windows_app.py` in a `.[gui,package]` environment.
-3. Test the packaged app on a clean Windows environment.
+1. Reduce packaged app size by building from a lean conda-forge packaging environment and excluding unused modules where safe.
+2. Test the packaged app on a clean Windows environment.
+3. Document limitations around OpenBabel and optional conversion features.
