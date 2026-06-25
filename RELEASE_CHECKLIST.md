@@ -48,6 +48,7 @@ dist/Groupy/Groupy.exe
 
 - Distribute the complete `dist/Groupy` folder. Do not move only `Groupy.exe` away from `_internal`.
 - Do not delete DLLs from `_internal` unless the packaged app is retested afterward.
+- Check `PACKAGING_SIZE_REPORT.md` when comparing package-size changes across builds.
 
 ## 4. GUI Smoke Test
 
@@ -86,9 +87,11 @@ Test the final artifact on a Windows machine without the development environment
 - Package the complete `dist/Groupy` folder as a zip archive.
 - Include release notes that mention optional dependency boundaries.
 - Record the build date, source commit, Python version, and build environment.
-- Keep `_internal` size optimization as a separate post-release task until the main workflow is stable.
+- Build from the clean OpenBLAS packaging environment when preparing release artifacts.
+- Treat any further `_internal` size optimization as optional and retest the app after each change.
 
 ## 8. Validation Record
 
 - 2026-06-25: User confirmed the packaged app validation can run normally.
 - 2026-06-25: User confirmed the enhanced GUI with import, options, and 2D structure preview looks satisfactory.
+- 2026-06-25: User confirmed the OpenBLAS-based rebuilt app can run normally and is much smaller.

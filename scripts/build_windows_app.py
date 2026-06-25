@@ -6,6 +6,7 @@ import argparse
 import importlib.util
 import platform
 import shlex
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -52,6 +53,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--console", action="store_true", help="Keep a console window for debugging.")
     parser.add_argument("--no-clean", action="store_true", help="Do not clear PyInstaller cache before building.")
     parser.add_argument(
+        "--no-clean-dist",
+        action="store_true",
+        help="Do not remove the existing output app folder or executable before building.",
+    )
+    parser.add_argument(
         "--no-default-excludes",
         action="store_true",
         help="Do not exclude the default list of unused optional modules.",
@@ -72,6 +78,8 @@ def main(argv: list[str] | None = None) -> int:
         print("PyInstaller command:")
         print(format_command(command))
         print(f"Expected output: {expected_output}")
+        if not args.no_clean_dist:
+            print(f"Clean output before build: {output_cleanup_path(args)}")
         return 0
 
     missing = [
@@ -93,6 +101,9 @@ def main(argv: list[str] | None = None) -> int:
             "Run this script on Windows to produce a Windows .exe.",
             file=sys.stderr,
         )
+
+    if not args.no_clean_dist:
+        clean_existing_output(args)
 
     completed = subprocess.run(command, cwd=ROOT, check=False)
     if completed.returncode != 0:
@@ -141,6 +152,24 @@ def expected_output_path(args: argparse.Namespace) -> Path:
     if args.mode == "onefile":
         return args.dist_path / f"{args.name}.exe"
     return args.dist_path / args.name / f"{args.name}.exe"
+
+
+def output_cleanup_path(args: argparse.Namespace) -> Path:
+    if args.mode == "onefile":
+        return args.dist_path / f"{args.name}.exe"
+    return args.dist_path / args.name
+
+
+def clean_existing_output(args: argparse.Namespace) -> None:
+    target = output_cleanup_path(args)
+    resolved_target = target.resolve()
+    resolved_dist = args.dist_path.resolve()
+    if resolved_target == resolved_dist or resolved_dist not in resolved_target.parents:
+        raise RuntimeError(f"Refusing to clean unsafe output path: {target}")
+    if target.is_dir():
+        shutil.rmtree(target)
+    elif target.exists():
+        target.unlink()
 
 
 def format_command(command: list[str]) -> str:

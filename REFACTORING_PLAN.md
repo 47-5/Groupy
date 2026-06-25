@@ -255,22 +255,25 @@ Current GUI status:
 - The user confirmed `dist/Groupy/Groupy.exe` can run normally.
 - The user confirmed packaged-app validation can run normally after the release checklist pass.
 - The generated `_internal` folder is currently large, about 753.5 MB, mainly because Intel MKL DLLs are bundled from the build environment.
+- `PACKAGING_SIZE_REPORT.md` records the current size baseline: `dist/Groupy` is about 772.41 MB, `_internal` is about 753.50 MB, and MKL DLLs account for about 538.61 MB.
+- Rebuilding from a clean conda-forge OpenBLAS packaging environment reduced `dist/Groupy` to about 228.43 MB and `_internal` to about 213.04 MB; MKL DLLs are no longer present.
 - The build script now excludes clearly unused optional modules by default and supports `--no-default-excludes` / `--exclude-module` for tuning.
+- The build script now removes the previous output folder before PyInstaller runs, so stale files do not remain in `_internal` after a rebuild.
 - README now recommends building from a clean conda-forge packaging environment before trying manual file exclusions.
-- `_internal` size optimization is deferred until the user-facing workflow and release checklist are stable.
+- `_internal` size optimization has removed MKL by using a clean OpenBLAS-based packaging environment. Further reductions are optional and should be measured against `PACKAGING_SIZE_REPORT.md`.
 - README documents that OpenBabel conversion, Gaussian input generation, and ASE visualization remain optional workflows outside the default GUI workflow.
 - `RELEASE_CHECKLIST.md` captures the pre-release build checks, GUI smoke test, clean Windows validation, and packaged app distribution notes.
 
 ## Current Known Review Findings
 
-- `_internal` size optimization is intentionally deferred until the release workflow is stable.
+- Further `_internal` size optimization is optional and should focus on ICU, RDKit, Qt/PySide6, and Tcl/Tk only after retesting the current OpenBLAS build.
 - The legacy interactive menu is still present for compatibility, but new automation should use `groupy.api`, `Groupy count`, `Groupy calculate`, or `Groupy convert`.
 - Advanced GUI pages for OpenBabel conversion, Gaussian input generation, and optional visualization are planned for a later phase.
 
 ## Near-Term Next Step
 
-Continue with Phase 9 packaging optimization:
+Continue with optional Phase 9 packaging optimization:
 
-1. Measure the current packaged app contents again.
-2. Identify the largest removable or avoidable dependencies in `_internal`.
-3. Optimize package size in small steps, retesting `dist/Groupy/Groupy.exe` after each change.
+1. Preserve the clean OpenBLAS packaging environment as the release build path.
+2. If more size reduction is needed, inspect ICU, RDKit, Qt/PySide6, and Tcl/Tk.
+3. Optimize remaining large components in small steps, retesting `dist/Groupy/Groupy.exe` after each change.

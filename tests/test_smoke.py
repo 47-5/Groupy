@@ -124,6 +124,7 @@ class PackagingSmokeTests(unittest.TestCase):
         self.assertIn("--exclude-module=IPython", completed.stdout)
         self.assertIn("groupy_gui_entry.py", completed.stdout)
         self.assertIn("dist", completed.stdout)
+        self.assertIn("Clean output before build:", completed.stdout)
 
     def test_windows_package_script_accepts_custom_excludes(self):
         script_path = Path(__file__).resolve().parents[1] / "scripts" / "build_windows_app.py"
@@ -146,6 +147,15 @@ class PackagingSmokeTests(unittest.TestCase):
         self.assertIn("--exclude-module=example_unused_module", completed.stdout)
         self.assertNotIn("--exclude-module=matplotlib", completed.stdout)
 
+    def test_windows_package_script_cleanup_targets_current_output(self):
+        from scripts.build_windows_app import output_cleanup_path
+
+        onedir_args = SimpleNamespace(mode="onedir", dist_path=Path("dist"), name="Groupy")
+        onefile_args = SimpleNamespace(mode="onefile", dist_path=Path("dist"), name="Groupy")
+
+        self.assertEqual(output_cleanup_path(onedir_args), Path("dist") / "Groupy")
+        self.assertEqual(output_cleanup_path(onefile_args), Path("dist") / "Groupy.exe")
+
     def test_readme_documents_packaged_app_limitations(self):
         readme_path = Path(__file__).resolve().parents[1] / "README.md"
         readme = readme_path.read_text(encoding="utf-8")
@@ -167,6 +177,19 @@ class PackagingSmokeTests(unittest.TestCase):
         self.assertIn("C1CCCC1", checklist)
         self.assertIn("CSV export", checklist)
         self.assertIn("OpenBabel from conda-forge", checklist)
+
+    def test_packaging_size_report_documents_current_baseline(self):
+        report_path = Path(__file__).resolve().parents[1] / "PACKAGING_SIZE_REPORT.md"
+        report = report_path.read_text(encoding="utf-8")
+
+        self.assertIn("dist/Groupy/_internal", report)
+        self.assertIn("MKL DLLs", report)
+        self.assertIn("538.61 MB", report)
+        self.assertIn("213.04 MB", report)
+        self.assertIn("MKL DLLs | 0 | 0.00 MB", report)
+        self.assertIn("OpenBLAS Rebuild Result", report)
+        self.assertIn("conda-forge packaging environment", report)
+        self.assertIn("--no-clean-dist", report)
 
     def test_ci_workflow_runs_build_and_package_checks(self):
         workflow_path = Path(__file__).resolve().parents[1] / ".github" / "workflows" / "ci.yml"

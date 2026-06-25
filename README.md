@@ -65,7 +65,9 @@ python -m pip install -e . --no-deps
 python scripts\build_windows_app.py
 ```
 
-The `_internal` folder contains bundled runtime libraries. Large MKL or BLAS DLLs usually come from the build environment and should not be deleted manually unless the packaged app is retested.
+The `_internal` folder contains bundled runtime libraries. Large MKL or BLAS DLLs usually come from the build environment and should not be deleted manually unless the packaged app is retested. Build from the clean conda-forge OpenBLAS packaging environment in `PACKAGING_SIZE_REPORT.md` to avoid bundling Intel MKL.
+The build script removes the previous output folder before building so stale `_internal` files do not affect package-size checks. Use `--no-clean-dist` only for debugging.
+Current packaging-size findings and optimization order are tracked in `PACKAGING_SIZE_REPORT.md`.
 
 Before distributing a packaged app to ordinary users, follow `RELEASE_CHECKLIST.md`.
 
