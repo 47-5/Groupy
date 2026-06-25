@@ -77,11 +77,11 @@ The current `groupy_main.py` is a fully interactive menu. Preserve it initially,
 - [x] Add `groupy/api.py` for non-interactive workflows shared by CLI and future GUI code.
 - [x] Move console entry point from `groupy.groupy_main:main` to the new CLI once ready.
 - [x] Preserve the old interactive menu as a subcommand or compatibility path.
-- [ ] Add scriptable commands such as:
+- [x] Add scriptable commands such as:
   - [x] `Groupy count --smiles C1CCCC1`
   - [x] `Groupy calculate --smiles C1CCCC1`
   - [x] `Groupy calculate --input SMILES.txt --output result.csv`
-  - `groupy convert --input molecule.xyz --from xyz --to mol2 --output molecule.mol2`
+  - [x] `Groupy convert --input molecule.xyz --from xyz --to mol2 --output molecule.mol2`
 - [x] Keep command-line parsing separate from chemistry logic.
 
 Current CLI behavior:
@@ -92,18 +92,19 @@ Current CLI behavior:
 - `Groupy count --smiles C1CCCC1 --output count.csv` writes one-row CSV output.
 - `Groupy calculate --smiles C1CCCC1` prints calculated properties as JSON.
 - `Groupy calculate --input SMILES.txt --output calculate.csv` writes batch calculated properties to CSV.
+- `Groupy convert --input molecule.xyz --from xyz --to mol2 --output molecule.mol2` converts one molecular file through OpenBabel.
 
 ## Phase 4: File And Path Handling
 
-- [ ] Replace scattered `os.path` logic with `pathlib.Path` where practical.
+- [x] Replace scattered `os.path` logic with `pathlib.Path` where practical in active CLI/API, conversion, generation, viewer, and batch output paths.
 - [x] Centralize SMILES file loading into one helper.
 - [x] Replace `list(open(...))` with context-managed file reads for SMILES input.
 - [x] Use explicit encodings for text SMILES files.
-- [ ] Avoid writing implicit side-effect files such as `error.txt`, `xyz_fail.txt`, and `gjf_fail.txt` to the current working directory unless requested.
+- [x] Avoid writing implicit side-effect files such as `error.txt`, `xyz_fail.txt`, and `gjf_fail.txt` to the current working directory unless requested.
   - [x] `Calculator.calculate_mols()` no longer writes `error.txt` unless `error_file_path` is provided.
   - [x] `Convertor.batch_smi_to_xyz()` no longer writes `xyz_fail.txt` or `xyz_succeed.txt` unless explicit paths are provided.
   - [x] `Generator.batch_smi_to_gjf()` no longer writes `gjf_fail.txt` or `gjf_succeed.txt` unless explicit paths are provided.
-- [ ] Make batch output paths predictable and configurable.
+- [x] Make batch output paths predictable and configurable.
 
 Current file handling status:
 
@@ -112,25 +113,27 @@ Current file handling status:
 - `Calculator.calculate_mols()` now supports an explicit `error_file_path` for failed SMILES output.
 - `Convertor.batch_smi_to_xyz()` now supports explicit `fail_file_path` and `succeed_file_path` outputs.
 - `Generator.batch_smi_to_gjf()` now supports explicit `fail_file_path` and `succeed_file_path` outputs.
+- Batch CSV and generated-file outputs create their parent directories when needed.
+- Conversion batch methods process input files in sorted order for stable output names.
 
 ## Phase 5: Exceptions, Logging, And Error Reporting
 
-- [ ] Replace bare `except:` blocks with specific exceptions.
+- [x] Replace bare `except:` blocks with specific exceptions.
   - [x] `Calculator.calculate_a_mol()` now catches expected calculation/input errors explicitly.
   - [x] `Counter.count_a_mol()` now catches expected invalid-input errors explicitly.
   - [x] `Convertor` file conversion paths now catch explicit conversion exceptions.
   - [x] `Generator.smi_to_gjf()` now catches explicit generation/input exceptions.
 - [x] Replace `raise NotImplemented(...)` with `NotImplementedError` or `ValueError`.
-- [ ] Move user-facing `print()` calls toward the CLI layer.
+- [x] Move user-facing `print()` calls toward the CLI layer for non-interactive paths.
   - [x] Core `Calculator.calculate_mols*()` batch methods now support `verbose=False`.
   - [x] Core `Counter.count_mols*()` batch methods now support `verbose=False`.
   - [x] Conversion `Convertor.batch_*()` methods now support `verbose=False`.
   - [x] Gaussian input `Generator.batch_smi_to_gjf*()` methods now support `verbose=False`.
-- [ ] Use `logging` in library code.
+- [x] Use `logging` in library code.
   - [x] Use module loggers for invalid SMILES in core calculator/counter paths.
   - [x] Use module loggers for conversion and Gaussian input generation failures.
-- [ ] For batch processing, continue processing failed molecules only when configured to do so.
-- [ ] Preserve enough failure detail to debug invalid SMILES, unsupported formats, and dependency problems.
+- [x] For batch processing, continue processing failed molecules only when configured to do so.
+- [x] Preserve enough failure detail to debug invalid SMILES, unsupported formats, and dependency problems.
   - [x] Add `InvalidSmilesError` for failed SMILES parsing.
   - [x] Failed property calculation records now include an `error` field.
   - [x] Batch calculation writes requested error SMILES from structured failed records.
@@ -146,6 +149,7 @@ Current exception/error reporting status:
 - `Generator.smi_to_gjf()` cleans temporary xyz files in a `finally` block.
 - Core batch calculation/counting methods keep legacy progress output by default, but `verbose=False` suppresses `print()` and `tqdm` output for GUI/programmatic use.
 - Conversion and Gaussian generation batch methods also keep legacy progress output by default, with `verbose=False` available for GUI/programmatic use.
+- Batch calculation, counting, conversion, and Gaussian generation methods default to legacy `continue_on_error=True`, with `continue_on_error=False` available for workflows that should stop on the first failure.
 
 ## Phase 6: Dependency Boundaries And Lazy Imports
 
@@ -174,7 +178,7 @@ Current dependency boundary status:
 
 - [x] Cache `Loader` results so Excel files are not repeatedly parsed.
 - [x] Add regression coverage around cached loader reads.
-- [ ] Keep SMARTS/group-counting logic behaviorally unchanged until tests cover it better.
+- [x] Keep SMARTS/group-counting logic behaviorally unchanged until tests cover it better.
 - [x] Rename or alias `*_mpi` APIs to `*_parallel`, since they use `joblib`, not MPI.
 - [x] Preserve old method names during transition for backward compatibility.
 
@@ -196,21 +200,21 @@ Current parallel API status:
 
 ## Phase 8: Documentation And CI
 
-- [ ] Update README with:
+- [x] Update README with:
   - [x] editable install
   - [x] conda/OpenBabel note
   - [x] library API examples
   - [x] CLI examples
   - [x] GUI install and launch examples
   - [x] packaged app release checklist link
-- [ ] Add a build check:
+- [x] Add a build check:
   - `python -m build`
-- [ ] Add GitHub Actions for:
-  - install
-  - lint
-  - tests
-  - package build
-- [ ] Keep generated API documentation separate from source documentation.
+- [x] Add GitHub Actions for:
+  - [x] install
+  - [x] lint
+  - [x] tests
+  - [x] package build
+- [x] Keep generated API documentation separate from source documentation.
 
 ## Phase 9: Desktop GUI And Application Packaging
 
@@ -252,12 +256,9 @@ Current GUI status:
 
 ## Current Known Review Findings
 
-- `Groupy.egg-info/`, `build/`, and `dist/` are tracked generated artifacts.
-- The command-line interface is tightly coupled to `input()` prompts.
-- Importing the current CLI path can require OpenBabel even for workflows that do not use conversion.
-- Several modules use bare `except:` and swallow useful debugging information.
-- Some file reads use `list(open(...))` without context managers or explicit encoding.
-- Batch workflows write failure logs to fixed filenames in the current working directory.
+- Clean Windows validation still needs to be run outside the development machine.
+- `_internal` size optimization is intentionally deferred until the release workflow is stable.
+- The legacy interactive menu is still present for compatibility, but new automation should use `groupy.api`, `Groupy count`, `Groupy calculate`, or `Groupy convert`.
 
 ## Near-Term Next Step
 

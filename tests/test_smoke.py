@@ -9,6 +9,7 @@ import tempfile
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
+from types import SimpleNamespace
 
 import pandas as pd
 
@@ -167,6 +168,15 @@ class PackagingSmokeTests(unittest.TestCase):
         self.assertIn("CSV export", checklist)
         self.assertIn("OpenBabel from conda-forge", checklist)
 
+    def test_ci_workflow_runs_build_and_package_checks(self):
+        workflow_path = Path(__file__).resolve().parents[1] / ".github" / "workflows" / "ci.yml"
+        workflow = workflow_path.read_text(encoding="utf-8")
+
+        self.assertIn("python -W error::ResourceWarning -m unittest discover -s tests", workflow)
+        self.assertIn("python -m compileall groupy tests scripts", workflow)
+        self.assertIn("python -m build", workflow)
+        self.assertIn("python scripts/build_windows_app.py --dry-run", workflow)
+
 
 class CoreChemistrySmokeTests(unittest.TestCase):
     def test_counter_counts_cyclopentane(self):
@@ -309,6 +319,44 @@ class CoreChemistrySmokeTests(unittest.TestCase):
             self.assertEqual(error_path.read_text(encoding="utf-8"), "not-a-smiles\n")
             self.assertTrue(output_path.exists())
 
+    def test_calculator_batch_can_stop_on_invalid_smiles(self):
+        from groupy.exceptions import InvalidSmilesError
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            input_path = tmp_path / "smiles.txt"
+            output_path = tmp_path / "calculate.csv"
+            input_path.write_text("not-a-smiles\n", encoding="utf-8")
+
+            with self.assertRaises(InvalidSmilesError):
+                Calculator().calculate_mols(
+                    str(input_path),
+                    properties_file_path=str(output_path),
+                    continue_on_error=False,
+                    verbose=False,
+                )
+
+            self.assertFalse(output_path.exists())
+
+    def test_counter_batch_can_stop_on_invalid_smiles(self):
+        from groupy.exceptions import InvalidSmilesError
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            input_path = tmp_path / "smiles.txt"
+            output_path = tmp_path / "count.csv"
+            input_path.write_text("not-a-smiles\n", encoding="utf-8")
+
+            with self.assertRaises(InvalidSmilesError):
+                Counter().count_mols(
+                    str(input_path),
+                    count_result_file_path=str(output_path),
+                    continue_on_error=False,
+                    verbose=False,
+                )
+
+            self.assertFalse(output_path.exists())
+
     def test_parallel_aliases_for_counter_and_calculator(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp_path = Path(tmpdir)
@@ -397,6 +445,29 @@ class ConvertorSmokeTests(unittest.TestCase):
                 _load_pybel()
         finally:
             builtins.__import__ = original_import
+
+    def test_convert_file_api_uses_predictable_default_output(self):
+        from groupy.api import convert_file
+        from groupy.gp_convertor import Convertor
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            input_path = tmp_path / "molecule.xyz"
+            input_path.write_text("fake xyz\n", encoding="utf-8")
+            original_convert_file_type = Convertor.convert_file_type
+
+            def fake_convert_file_type(in_format, in_path, out_format, out_path=None):
+                Path(out_path).write_text(f"converted from {in_format} to {out_format}\n", encoding="utf-8")
+                return str(out_path)
+
+            Convertor.convert_file_type = staticmethod(fake_convert_file_type)
+            try:
+                output_path = convert_file(input_path, "xyz", "mol2")
+            finally:
+                Convertor.convert_file_type = original_convert_file_type
+
+            self.assertEqual(output_path, tmp_path / "molecule.mol2")
+            self.assertTrue(output_path.exists())
 
     def test_convertor_reports_invalid_smiles_for_xyz(self):
         from groupy.gp_convertor import Convertor
@@ -515,6 +586,27 @@ class ConvertorSmokeTests(unittest.TestCase):
             self.assertEqual(stderr.getvalue(), "")
             self.assertTrue((xyz_root / "0000.xyz").exists())
 
+    def test_batch_smi_to_xyz_can_stop_on_failure(self):
+        from groupy.exceptions import ConversionError
+        from groupy.gp_convertor import Convertor
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            input_path = tmp_path / "smiles.txt"
+            xyz_root = tmp_path / "xyz"
+            input_path.write_text("invalid\n", encoding="utf-8")
+
+            convertor = Convertor()
+            convertor.smi_to_xyz = lambda smi, xyz_path=None: False
+
+            with self.assertRaises(ConversionError):
+                convertor.batch_smi_to_xyz(
+                    str(input_path),
+                    str(xyz_root),
+                    verbose=False,
+                    continue_on_error=False,
+                )
+
     def test_batch_convert_file_type_can_run_quietly_for_gui_use(self):
         from groupy.gp_convertor import Convertor
 
@@ -558,7 +650,7 @@ class ConvertorSmokeTests(unittest.TestCase):
             (input_root / "molecule.mol").write_text("fake mol\n", encoding="utf-8")
 
             convertor = Convertor()
-            convertor.file_to_smi = lambda file_path, format=None: "C1CCCC1"
+            convertor.file_to_smi = lambda file_path, format=None, **kwargs: "C1CCCC1"
             stdout = io.StringIO()
             stderr = io.StringIO()
 
@@ -759,6 +851,12 @@ class GeneratorSmokeTests(unittest.TestCase):
 
 
 class ViewerSmokeTests(unittest.TestCase):
+    def test_viewer_source_has_no_bare_except(self):
+        source_path = Path(__file__).resolve().parents[1] / "groupy" / "gp_viewer.py"
+        source = source_path.read_text(encoding="utf-8")
+
+        self.assertNotIn("except:", source)
+
     def test_viewer_module_does_not_import_ase_at_import_time(self):
         command = [
             sys.executable,
@@ -995,6 +1093,54 @@ class CliSmokeTests(unittest.TestCase):
             result = pd.read_csv(output_path)
             self.assertEqual(result["smiles"].tolist(), ["C1CCCC1", "CCO"])
             self.assertIn("molar_mass", result.columns)
+
+    def test_convert_cli_uses_api_and_outputs_json(self):
+        from groupy import api
+        from groupy import cli
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            input_path = tmp_path / "molecule.xyz"
+            output_path = tmp_path / "molecule.mol2"
+            input_path.write_text("fake xyz\n", encoding="utf-8")
+            calls = []
+            original_convert_file = api.convert_file
+
+            def fake_convert_file(input_path, from_format, to_format, output_path=None):
+                calls.append(SimpleNamespace(
+                    input_path=Path(input_path),
+                    from_format=from_format,
+                    to_format=to_format,
+                    output_path=Path(output_path),
+                ))
+                return Path(output_path)
+
+            api.convert_file = fake_convert_file
+            stdout = io.StringIO()
+            try:
+                with redirect_stdout(stdout):
+                    exit_code = cli.main(
+                        [
+                            "convert",
+                            "--input",
+                            str(input_path),
+                            "--from",
+                            "xyz",
+                            "--to",
+                            "mol2",
+                            "--output",
+                            str(output_path),
+                        ]
+                    )
+            finally:
+                api.convert_file = original_convert_file
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(calls[0].input_path, input_path)
+            self.assertEqual(calls[0].from_format, "xyz")
+            self.assertEqual(calls[0].to_format, "mol2")
+            self.assertEqual(calls[0].output_path, output_path)
+            self.assertEqual(json.loads(stdout.getvalue()), {"output": str(output_path)})
 
     @unittest.skipUnless(importlib.util.find_spec("openbabel"), "OpenBabel is required by the legacy interactive CLI")
     def test_legacy_cli_can_start_and_exit(self):

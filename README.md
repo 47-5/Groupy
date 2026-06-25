@@ -42,6 +42,8 @@ For non-interactive use, one can run commands such as:
 
 `Groupy calculate --smiles C1CCCC1`
 
+`Groupy convert --input molecule.xyz --from xyz --to mol2 --output molecule.mol2`
+
 To launch the desktop GUI after installing GUI support:
 
 `Groupy-GUI`
@@ -82,8 +84,12 @@ Calculator().calculate_mols("SMILES.txt", "calculate.csv", verbose=False)
 Counter().count_mols("SMILES.txt", "count.csv", add_smiles=True, verbose=False)
 ```
 
+Batch APIs keep processing failed molecules by default for backward compatibility. Pass `continue_on_error=False` when a script or GUI workflow should stop at the first invalid input.
+
+CI runs the smoke tests, source compilation check, `python -m build`, and a dry-run Windows app packaging command.
+
 ### Manual and Documention
-The user manual is in the manual folder, and the API documentation can be found in the doc folder.
+The user manual is in the manual folder. Generated API documentation can be found in the doc folder and should be kept separate from source documentation.
 
 
 # Known limitation

@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 from rdkit import Chem
 from math import log
 import pandas as pd
@@ -349,7 +350,8 @@ class Calculator:
             return False
 
 
-    def calculate_a_mol(self, mol, parameter_type='step_wise', check_hydrocarbon=True, debug=False):
+    def calculate_a_mol(self, mol, parameter_type='step_wise', check_hydrocarbon=True, debug=False,
+                        raise_on_error=False):
         """
         Calculating properties of a molecule.
         :param mol: instance of rdkit.Chem.rdchem.Mol or SMILES str which will be converter to rdkit.Chem.rdchem.Mol automatically.
@@ -357,6 +359,7 @@ class Calculator:
         :param check_hydrocarbon: bool. Since Calculator.delta_Hc() was designed for hydrocarbon, if set to True, Calculator will check whether the molecule is hydrocarbon.
         If the molecule is not hydrocarbon, Calculator will not calculate delta_Hc, q and ISP. If set to False, Calculator will calculate these properties no matter whether the molecule is hydrocarbon.
         Default=True.
+        :param raise_on_error: if True, re-raise expected input/calculation errors instead of returning placeholders.
         :return: dict like {'smiles': init_smi,
                     'molar_mass': value,
                     'flash_point/K': value,
@@ -441,12 +444,14 @@ class Calculator:
                     'ISP': isp,
                     'note': counter_note + ' at 298K'}
         except (InvalidSmilesError, TypeError, ValueError, KeyError, AttributeError, ArithmeticError) as exc:
+            if raise_on_error:
+                raise
             logger.warning("Failed to calculate properties for %r: %s", init_smi, exc)
             return _failed_calculation_result(init_smi, str(exc))
 
     def calculate_mols(self, smiles_file_path, properties_file_path='gp_3x_result.csv',
                        check_hydrocarbon=True, parameter_type='step_wise',
-                       error_file_path=None, verbose=True):
+                       error_file_path=None, verbose=True, continue_on_error=True):
         """
         Calculating properties of a batch of molecules.
         :param smiles_file_path: path of the file(.txt, .xlsx, .csv) in which saved SMILES.
@@ -456,6 +461,7 @@ class Calculator:
         Default=True.
         :param error_file_path: optional path for writing SMILES strings that failed during batch calculation.
         :param verbose: if True, print progress messages and progress bars. Set False for programmatic or GUI use.
+        :param continue_on_error: if True, keep legacy batch behavior and write placeholder rows for failed SMILES.
         :return: instance of pandas.DataFrame
         """
         _report_progress('reading input file...', verbose)
@@ -475,14 +481,21 @@ class Calculator:
         properties_dict_list = []
         error_smi = []
         for i in tqdm(smiles_iterator, disable=not verbose):
-            result = self.calculate_a_mol(i, check_hydrocarbon=check_hydrocarbon, parameter_type=parameter_type)
+            result = self.calculate_a_mol(
+                i,
+                check_hydrocarbon=check_hydrocarbon,
+                parameter_type=parameter_type,
+                raise_on_error=not continue_on_error,
+            )
             properties_dict_list.append(result)
             if result.get('error'):
                 error_smi.append(i)
         _report_progress('calculation completed!', verbose)
         _report_progress('start to export result to {} ...'.format(properties_file_path), verbose)
         result = pd.DataFrame(properties_dict_list)
-        result.to_csv(properties_file_path, index_label='index')
+        output_path = Path(properties_file_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        result.to_csv(output_path, index_label='index')
         if error_file_path is not None:
             write_text_lines(error_smi, error_file_path)
         _report_progress('Done!', verbose)
@@ -490,7 +503,7 @@ class Calculator:
 
     def calculate_mols_mpi(self, smiles_file_path, properties_file_path='gp_3x_result_mpi.csv',
                            check_hydrocarbon=True, parameter_type='step_wise',
-                           n_jobs=1, batch_size='auto', verbose=True):
+                           n_jobs=1, batch_size='auto', verbose=True, continue_on_error=True):
         """
         Calculating properties of a batch of molecules with MPI acceleration.
         :param smiles_file_path: path of the file(.txt, .xlsx, .csv) in which saved SMILES.
@@ -501,6 +514,7 @@ class Calculator:
         :param n_jobs: int. Number of cores. Default=1
         :param batch_size: int. Task number per core. default='auto'
         :param verbose: if True, print progress messages. Set False for programmatic or GUI use.
+        :param continue_on_error: if True, keep legacy batch behavior and write placeholder rows for failed SMILES.
         :return: instance of pandas.DataFrame
         """
         _report_progress('reading input file...', verbose)
@@ -517,12 +531,22 @@ class Calculator:
             verbose,
         )
         _report_progress('start calculating...', verbose)
-        task = [delayed(self.calculate_a_mol)(i, parameter_type=parameter_type, check_hydrocarbon=check_hydrocarbon) for i in smiles_iterator]
+        task = [
+            delayed(self.calculate_a_mol)(
+                i,
+                parameter_type=parameter_type,
+                check_hydrocarbon=check_hydrocarbon,
+                raise_on_error=not continue_on_error,
+            )
+            for i in smiles_iterator
+        ]
         properties_dict_list = Parallel(n_jobs=n_jobs, batch_size=batch_size)(task)
         _report_progress('calculation completed!', verbose)
         _report_progress('start to export result to {} ...'.format(properties_file_path), verbose)
         result = pd.DataFrame(properties_dict_list)
-        result.to_csv(properties_file_path, index_label='index')
+        output_path = Path(properties_file_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        result.to_csv(output_path, index_label='index')
         _report_progress('Done!', verbose)
         return result
 

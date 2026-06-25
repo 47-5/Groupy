@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 
 from tqdm import tqdm
 from rdkit import Chem
@@ -3238,13 +3239,14 @@ class Counter:
             ]
         self.f_order_group_function_order, self.s_order_group_function_order, self.t_order_group_function_order = self.loader.load_group_order()
 
-    def count_a_mol(self, mol, clear_mode=False, add_note=False, add_smiles=False):
+    def count_a_mol(self, mol, clear_mode=False, add_note=False, add_smiles=False, raise_on_error=False):
         """
         Counting number of different groups of a molecule.
         :param mol: instance of rdkit.Chem.rdchem.Mol or SMILES str which will be converter to rdkit.Chem.rdchem.Mol automatically.
         :param clear_mode: bool. If set to True, The dictionary that stores the results will only retain groups with a count that is not zero. Default=False.
         :param add_note: bool. If set to True, a note(SMILES of current molecule) will be added to the dictionary that stores the results, i.e. {note: SMILES}. Default=False.
         :param add_smiles: bool. If set to True, The SMILES of current molecule will be added to the dictionary that stores the results, i.e. {smiles: SMILES}. Default=False.
+        :param raise_on_error: if True, re-raise expected input errors instead of returning zero counts.
         :return: Dict. A dictionary that stores the results.
         """
         init_smi = mol
@@ -3264,11 +3266,13 @@ class Counter:
                 self.result = {k: v for k, v in self.result.items() if v}
             return self.result
         except (InvalidSmilesError, TypeError) as exc:
+            if raise_on_error:
+                raise
             logger.warning("Failed to count groups for %r: %s", init_smi, exc)
             return self.init_result.copy()
 
     def count_mols(self, smiles_file_path, count_result_file_path='count_result.csv',
-                   add_note=False, add_smiles=False, verbose=True):
+                   add_note=False, add_smiles=False, verbose=True, continue_on_error=True):
         """
         Counting number of different groups of a batch of molecules.
         :param smiles_file_path: str. Path of the file(.txt, .xlsx, .csv) in which saved SMILES of molecules.
@@ -3276,6 +3280,7 @@ class Counter:
         :param add_note: bool. If set to True, a note(SMILES of current molecule) will be added to the dictionary that stores the results, i.e. {note: SMILES}. Default=False.
         :param add_smiles: bool. If set to True, The SMILES of current molecule will be added to the dictionary that stores the results, i.e. {smiles: SMILES}. Default=False.
         :param verbose: if True, print progress messages and progress bars. Set False for programmatic or GUI use.
+        :param continue_on_error: if True, keep legacy batch behavior and write zero rows for invalid SMILES.
         :return: pandas Dataframe. A dictionary that stores the results.
         """
         _report_progress('reading the input file...', verbose)
@@ -3289,16 +3294,26 @@ class Counter:
         _report_progress('Done, totally detected {} molecules, start counting...'.format(mol_number), verbose)
         count_result_dict_list = []
         for i in tqdm(smiles_iterator, disable=not verbose):
-            count_result_dict_list.append(self.count_a_mol(i, add_note=add_note, add_smiles=add_smiles))
+            count_result_dict_list.append(
+                self.count_a_mol(
+                    i,
+                    add_note=add_note,
+                    add_smiles=add_smiles,
+                    raise_on_error=not continue_on_error,
+                )
+            )
         _report_progress('Done!', verbose)
         _report_progress('writing to csv...', verbose)
         result = pd.DataFrame(count_result_dict_list)
-        result.to_csv(count_result_file_path, index_label='index')
+        output_path = Path(count_result_file_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        result.to_csv(output_path, index_label='index')
         _report_progress('Done!', verbose)
         return result
 
     def count_mols_mpi(self, smiles_file_path, count_result_file_path='count_result.csv',
-                       add_note=False, add_smiles=False, n_jobs=1, batch_size='auto', verbose=True):
+                       add_note=False, add_smiles=False, n_jobs=1, batch_size='auto', verbose=True,
+                       continue_on_error=True):
         """
         Counting number of different groups of a batch of molecules with MPI acceleration.
         :param smiles_file_path: str. Path of the file(.txt, .xlsx, .csv) in which saved SMILES of molecules.
@@ -3308,6 +3323,7 @@ class Counter:
         :param n_jobs: int. number of CPU cores you want to use when counting groups.
         :param batch_size: int or str. Number of tasks per CPU core you want to use when counting groups. Default='auto'.
         :param verbose: if True, print progress messages. Set False for programmatic or GUI use.
+        :param continue_on_error: if True, keep legacy batch behavior and write zero rows for invalid SMILES.
         :return: pandas Dataframe. A dictionary that stores the results.
         """
         _report_progress('reading the input file...', verbose)
@@ -3319,12 +3335,22 @@ class Counter:
 
         mol_number = len(smiles_iterator)
         _report_progress('Done, totally detected {} molecules, start counting...'.format(mol_number), verbose)
-        task = [delayed(self.count_a_mol)(i, add_note=add_note, add_smiles=add_smiles) for i in smiles_iterator]
+        task = [
+            delayed(self.count_a_mol)(
+                i,
+                add_note=add_note,
+                add_smiles=add_smiles,
+                raise_on_error=not continue_on_error,
+            )
+            for i in smiles_iterator
+        ]
         count_result_dict_list = Parallel(n_jobs=n_jobs, batch_size=batch_size)(task)
         _report_progress('Done!', verbose)
         _report_progress('writing to csv...', verbose)
         result = pd.DataFrame(count_result_dict_list)
-        result.to_csv(count_result_file_path, index_label='index')
+        output_path = Path(count_result_file_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        result.to_csv(output_path, index_label='index')
         _report_progress('Done!', verbose)
         return result
 

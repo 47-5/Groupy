@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from typing import Sequence
 
@@ -85,6 +86,34 @@ def build_parser() -> argparse.ArgumentParser:
         help="optional CSV path for saving the result",
     )
 
+    convert_parser = subparsers.add_parser(
+        "convert",
+        help="convert one molecular file to another format",
+    )
+    convert_parser.add_argument(
+        "--input",
+        type=Path,
+        required=True,
+        help="input molecule file",
+    )
+    convert_parser.add_argument(
+        "--from",
+        dest="from_format",
+        required=True,
+        help="input file format, such as xyz or mol",
+    )
+    convert_parser.add_argument(
+        "--to",
+        dest="to_format",
+        required=True,
+        help="output file format, such as mol2 or pdb",
+    )
+    convert_parser.add_argument(
+        "--output",
+        type=Path,
+        help="optional output file path",
+    )
+
     return parser
 
 
@@ -148,6 +177,25 @@ def _run_calculate(args: argparse.Namespace) -> int:
     return 0
 
 
+def _run_convert(args: argparse.Namespace) -> int:
+    from groupy.api import convert_file
+    from groupy.exceptions import ConversionError
+
+    try:
+        output_path = convert_file(
+            args.input,
+            from_format=args.from_format,
+            to_format=args.to_format,
+            output_path=args.output,
+        )
+    except (ConversionError, ImportError) as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+
+    print(_format_json_output([{"output": str(output_path)}], single=True))
+    return 0
+
+
 def _format_json_output(records: list[dict], *, single: bool) -> str:
     payload = records[0] if single else records
     return json.dumps(payload, ensure_ascii=False, sort_keys=True)
@@ -163,6 +211,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return _run_count(args)
     if args.command == "calculate":
         return _run_calculate(args)
+    if args.command == "convert":
+        return _run_convert(args)
 
     parser.error(f"Unsupported command: {args.command}")
     return 2
