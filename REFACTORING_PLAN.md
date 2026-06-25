@@ -232,7 +232,7 @@ Current parallel API status:
 - [x] Add GUI smoke tests where practical.
 - [x] Add packaging script for Windows executable builds.
 - [x] Test the packaged app can launch and run.
-- [ ] Test the packaged app on a clean Windows environment.
+- [x] Test the packaged app on a clean Windows environment.
 - [x] Document limitations around OpenBabel and optional conversion features.
 - [x] Add a release checklist for ordinary-user distribution.
 
@@ -247,6 +247,7 @@ Current GUI status:
 - `scripts/build_windows_app.py` builds a PyInstaller app folder by default at `dist/Groupy/Groupy.exe`.
 - The build script supports `--dry-run` for command inspection without requiring PyInstaller/PySide6.
 - The user confirmed `dist/Groupy/Groupy.exe` can run normally.
+- The user confirmed packaged-app validation can run normally after the release checklist pass.
 - The generated `_internal` folder is currently large, about 753.5 MB, mainly because Intel MKL DLLs are bundled from the build environment.
 - The build script now excludes clearly unused optional modules by default and supports `--no-default-excludes` / `--exclude-module` for tuning.
 - README now recommends building from a clean conda-forge packaging environment before trying manual file exclusions.
@@ -256,14 +257,13 @@ Current GUI status:
 
 ## Current Known Review Findings
 
-- Clean Windows validation still needs to be run outside the development machine.
 - `_internal` size optimization is intentionally deferred until the release workflow is stable.
 - The legacy interactive menu is still present for compatibility, but new automation should use `groupy.api`, `Groupy count`, `Groupy calculate`, or `Groupy convert`.
 
 ## Near-Term Next Step
 
-Continue with Phase 9:
+Continue with Phase 9 packaging optimization:
 
-1. Run `RELEASE_CHECKLIST.md` on a clean Windows environment.
-2. Record any clean Windows findings in the release notes or README.
-3. Return to `_internal` size optimization after the release workflow is stable.
+1. Measure the current packaged app contents again.
+2. Identify the largest removable or avoidable dependencies in `_internal`.
+3. Optimize package size in small steps, retesting `dist/Groupy/Groupy.exe` after each change.

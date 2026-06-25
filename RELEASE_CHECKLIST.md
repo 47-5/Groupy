@@ -84,3 +84,7 @@ Test the final artifact on a Windows machine without the development environment
 - Include release notes that mention optional dependency boundaries.
 - Record the build date, source commit, Python version, and build environment.
 - Keep `_internal` size optimization as a separate post-release task until the main workflow is stable.
+
+## 8. Validation Record
+
+- 2026-06-25: User confirmed the packaged app validation can run normally.
