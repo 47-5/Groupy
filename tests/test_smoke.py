@@ -946,6 +946,38 @@ class GuiSmokeTests(unittest.TestCase):
         self.assertAlmostEqual(calculation[0]["molar_mass"], 70.135)
         self.assertEqual(counts[0], {"f_168": 5, "smiles": "C1CCCC1"})
 
+    def test_gui_record_helpers_accept_user_options(self):
+        from groupy.gui.app import calculate_records, count_records
+
+        calculation = calculate_records(["CCO"], check_hydrocarbon=True)
+        calculation_without_filter = calculate_records(["CCO"], check_hydrocarbon=False)
+        counts = count_records(["C1CCCC1"], include_zero=True, include_smiles=False)
+
+        self.assertIsNone(calculation[0]["delta_Hc/(KJ/mol)"])
+        self.assertIsNotNone(calculation_without_filter[0]["delta_Hc/(KJ/mol)"])
+        self.assertIn("f_001", counts[0])
+        self.assertNotIn("smiles", counts[0])
+
+    def test_gui_can_load_smiles_text_from_file(self):
+        from groupy.gui.app import load_smiles_text
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            input_path = Path(tmpdir) / "smiles.txt"
+            input_path.write_text("C1CCCC1\nCCO\n", encoding="utf-8")
+
+            self.assertEqual(load_smiles_text(input_path), "C1CCCC1\nCCO")
+
+    def test_gui_can_render_smiles_structure_png(self):
+        from groupy.exceptions import InvalidSmilesError
+        from groupy.gui.app import render_smiles_png
+
+        image = render_smiles_png("C1CCCC1", width=220, height=160)
+
+        self.assertTrue(image.startswith(b"\x89PNG\r\n\x1a\n"))
+        self.assertGreater(len(image), 1000)
+        with self.assertRaises(InvalidSmilesError):
+            render_smiles_png("not-a-smiles")
+
 
 class CliSmokeTests(unittest.TestCase):
     def test_cli_import_does_not_load_openbabel_conversion_stack(self):

@@ -54,8 +54,11 @@ dist/Groupy/Groupy.exe
 Run `dist/Groupy/Groupy.exe` and check:
 
 - The window opens by double-clicking.
+- SMILES file import works for a small `.txt`, `.csv`, or `.xlsx` input.
+- The 2D structure preview updates for `C1CCCC1`.
 - Property calculation works for `C1CCCC1`.
 - Group counting works for `C1CCCC1`.
+- Parameter and group-counting options can be changed before running.
 - CSV export creates a readable file.
 - Invalid SMILES input produces an error row instead of crashing.
 - Long-running calculation or counting does not freeze the UI.

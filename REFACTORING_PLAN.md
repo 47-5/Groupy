@@ -23,6 +23,7 @@ Recommended GUI scope:
 - Single-molecule group counting from SMILES.
 - Batch calculation from `.txt`, `.csv`, or `.xlsx`.
 - Batch group counting from `.txt`, `.csv`, or `.xlsx`.
+- 2D structure preview for the selected or first SMILES.
 - CSV export for tabular results.
 - Clear dependency warnings for optional conversion/viewer features.
 
@@ -224,8 +225,11 @@ Current parallel API status:
 - [x] Add a `Groupy-GUI` entry point.
 - [x] Build first GUI screen for:
   - [x] SMILES input
+  - [x] SMILES file import
+  - [x] 2D structure preview
   - [x] property calculation
   - [x] group counting
+  - [x] calculation and group-counting options
   - [x] CSV export
 - [x] Visually smoke-test the initial GUI runtime.
 - [x] Add background worker handling so long calculations do not freeze the UI.
@@ -242,6 +246,7 @@ Current GUI status:
 - `python -m groupy.gui --check` and `Groupy-GUI --check` report a clear install hint when PySide6 is missing.
 - `groupy.gui` imports without importing PySide6, so core CLI/API usage remains lightweight.
 - The user confirmed the first GUI can run normally in a GUI-capable environment.
+- The GUI now supports SMILES file import, RDKit 2D structure preview, parameter type selection, hydrocarbon filtering, zero-count group display, and optional SMILES columns.
 - Property calculation and group counting now run in a `QThread` worker instead of the GUI thread.
 - Worker-based GUI behavior still needs visual confirmation in a PySide6 environment.
 - `scripts/build_windows_app.py` builds a PyInstaller app folder by default at `dist/Groupy/Groupy.exe`.
@@ -259,6 +264,7 @@ Current GUI status:
 
 - `_internal` size optimization is intentionally deferred until the release workflow is stable.
 - The legacy interactive menu is still present for compatibility, but new automation should use `groupy.api`, `Groupy count`, `Groupy calculate`, or `Groupy convert`.
+- Advanced GUI pages for OpenBabel conversion, Gaussian input generation, and optional visualization are planned for a later phase.
 
 ## Near-Term Next Step
 

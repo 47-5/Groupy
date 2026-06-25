@@ -48,6 +48,8 @@ To launch the desktop GUI after installing GUI support:
 
 `Groupy-GUI`
 
+The GUI supports SMILES text input, SMILES file import, 2D structure preview, property calculation, group counting, calculation/counting options, and CSV export.
+
 To build a double-clickable Windows app folder:
 
 `python scripts/build_windows_app.py`
